@@ -1,0 +1,240 @@
+#!/usr/bin/env python
+
+import re
+import os
+import sys
+import email
+import inspect
+import imaplib
+import smtplib
+import logging
+import optparse
+import email.utils
+
+re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
+
+ACTIONS = ('list', 'send_later', 'rotate')
+
+class CommandError(Exception):
+    pass
+
+class Command(object):
+    def __init__(self):
+        self.log = None
+        self.imap = None
+        self.smtp = None
+
+    def main(self):
+        parser = optparse.OptionParser(
+            usage='%%prog [options] [%s]' % '|'.join(ACTIONS),
+        )
+
+        parser.add_option('--verbosity', dest='verbosity', default=0, type='int')
+
+        self.options, args = parser.parse_args()
+
+        if not args:
+            parser.error("must specify an action")
+
+        action, args = args[0], args[1:]
+
+        if action not in ACTIONS:
+            parser.error("invalid action %r" % action)
+
+        # Parse environment for authentication details
+        for x in ('imap', 'smtp'):
+            for y in ('server', 'username', 'password'):
+                key = '%s_%s' % (x.upper(), y.upper())
+
+                try:
+                    setattr(self.options, '%s_%s' % (x, y), os.environ[key])
+                except KeyError:
+                    parser.error("missing environment variable %s" % key)
+
+        fn = getattr(self, 'handle_%s' % action)
+
+        if len(inspect.getargspec(fn).args) - 1 != len(args):
+            parser.error("invalid number of arguments for action %s" % action)
+
+        self.setup_logging()
+
+        try:
+            self.connect()
+            fn(*args)
+            self.disconnect()
+        except CommandError, exc:
+            self.log.error(exc.message)
+            return 1
+
+        return 0
+
+    ## Actions ################################################################
+
+    def handle_list(self):
+        for x in self.imap.list()[1]:
+            print x.split(' "." ')[-1]
+
+    def handle_rotate(self, template, target, start, stop):
+        for x in range(int(start), int(stop) + 1):
+            try:
+                src = template % x
+            except TypeError:
+                src = template
+
+            if not self.select_mailbox(src):
+                continue
+
+            messages = self.get_messages()
+
+            for idx in messages:
+                self.move_message(self.get_uid(idx), target)
+
+            self.log.info("Moved %d message(s) from %s -> %s",
+                len(messages),
+                src,
+                target,
+            )
+
+    def handle_send_later(self, src, target):
+        if not self.select_mailbox(src):
+            return
+
+        for idx in self.get_messages():
+            uid = self.get_uid(idx)
+
+            raw = self.parse(self.imap.fetch(idx, '(RFC822)'))[1]
+
+            msg = email.message_from_string(raw)
+
+            # Don't reveal the original date
+            del msg['date']
+
+            recipients = set(
+                y
+                for x in ('to', 'cc', 'bcc')
+                for _, y in email.utils.getaddresses(msg.get_all(x, []))
+            )
+
+            self.log.info(
+                "Sending message %r to %s",
+                msg['subject'],
+                ', '.join(recipients),
+            )
+
+            self.smtp.sendmail(msg['from'], recipients, raw)
+
+            # Remove draft flag
+            self.flag_message(uid, 'Draft', False)
+
+            self.move_message(uid, target)
+
+    ## Utils ##################################################################
+
+    def setup_logging(self):
+        self.log = logging.getLogger()
+        self.log.setLevel({
+            0: logging.WARNING,
+            1: logging.INFO,
+            2: logging.DEBUG,
+        }[self.options.verbosity])
+
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(
+            logging.Formatter('%(asctime).19s %(levelname).1s %(message)s')
+        )
+        self.log.addHandler(handler)
+
+    def connect(self):
+        self.log.debug("Connecting to IMAP server %s", self.options.imap_server)
+        self.imap = imaplib.IMAP4_SSL(self.options.imap_server)
+
+        self.log.debug("Logging into to IMAP server")
+        self.imap.login(self.options.imap_username, self.options.imap_password)
+
+        self.log.debug("Connecting to SMTP server %s", self.options.smtp_server)
+        self.smtp = smtplib.SMTP_SSL(self.options.smtp_server)
+
+        self.log.debug("Logging into SMTP server")
+        self.smtp.login(self.options.smtp_username, self.options.smtp_password)
+
+    def disconnect(self):
+        self.log.debug("Disconnecting")
+
+        self.smtp.quit()
+
+        try:
+            self.imap.close()
+        except self.imap.error:
+            pass
+
+        self.imap.logout()
+
+    def flag_message(self, uid, name, enable):
+        self.log.debug(
+            "%s flag %%r on UID %%s" % ("Setting" if enable else "Unsetting"),
+            name,
+            uid,
+        )
+
+        response = self.imap.uid(
+            'STORE',
+            uid,
+            '+FLAGS' if enable else '-FLAGS',
+            r'(\%s)' % name,
+        )
+
+        self.check_response(response, "Error setting %s flag" % name)
+
+    def move_message(self, uid, target):
+        self.log.debug("Copying message %s to %s", uid, target)
+
+        self.check_response(
+            self.imap.uid('COPY', uid, target),
+            "Error copying message",
+        )
+
+        self.flag_message(uid, 'Deleted', True)
+        self.imap.expunge()
+
+    def select_mailbox(self, mailbox):
+        """
+        Returns the number of messages in the mailbox.
+        """
+
+        self.log.debug("Selecting mailbox %r", mailbox)
+
+        response = self.imap.select(mailbox)
+
+        self.check_response(response, "Error selecting mailbox")
+
+        return int(self.parse(response))
+
+    def get_messages(self):
+        data = self.parse(self.imap.search(None, 'ALL'))
+
+        # Work in reverse as we could changing stuff, altering indices
+        return [int(x) for x in reversed(data.split())]
+
+    def get_uid(self, idx):
+        txt = self.parse(self.imap.fetch(idx, '(UID)'))
+
+        m = re_uid.match(txt)
+
+        if m is None:
+            raise CommandError("Could not parse UID from %r" % txt)
+
+        return int(m.group('uid'))
+
+    #
+
+    def parse(self, val):
+        return val[1][0]
+
+    def check_response(self, response, msg):
+        if response[0] == 'OK':
+            return
+
+        raise CommandError("%s: %s" % (msg, ' '.join(response[1])))
+
+if __name__ == '__main__':
+    sys.exit(Command().main())
