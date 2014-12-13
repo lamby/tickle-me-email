@@ -8,7 +8,7 @@ Examples
 --------
 
 "Tickler" file email rotation from (eg.) ``DELAYED.07`` to ``DELAYED.06`` etc.
-Mail from ``"DELAYED.01`` is moved to your main inbox. Use this to "put off"
+Mail from ``DELAYED.01`` is moved to your main inbox. Use this to "put off"
 emails until a day they are important. To be run daily from cron(8)::
 
   $ tickle-me-email rotate Inbox.Mail.DELAYED.%02d INBOX 0 7
