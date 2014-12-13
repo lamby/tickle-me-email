@@ -42,10 +42,10 @@ Configuration
 
 You need to set the following environment variables:
 
- * ``IMAP_SERVER`` (eg. ``imap.example.org``)
- * ``IMAP_USERNAME`` (eg. ``lamby``)
- * ``IMAP_PASSWORD`` (eg. ``secret``)
+* ``IMAP_SERVER`` (eg. ``imap.example.org``)
+* ``IMAP_USERNAME`` (eg. ``lamby``)
+* ``IMAP_PASSWORD`` (eg. ``secret``)
 
- * ``SMTP_SERVER`` (eg. ``smtp.example.org``)
- * ``SMTP_USERNAME`` (eg. ``lamby``)
- * ``SMTP_PASSWORD`` (eg. ``secret``)
+* ``SMTP_SERVER`` (eg. ``smtp.example.org``)
+* ``SMTP_USERNAME`` (eg. ``lamby``)
+* ``SMTP_PASSWORD`` (eg. ``secret``)
