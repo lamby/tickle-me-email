@@ -13,7 +13,7 @@ import email.utils
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'send-later', 'rotate')
+ACTIONS = ('list', 'move', 'send-later', 'rotate')
 
 class CommandError(Exception):
     pass
@@ -73,6 +73,21 @@ class Command(object):
     def handle_list(self):
         for x in self.imap.list()[1]:
             print x.split(' "." ')[-1]
+
+    def handle_move(self, src, dst):
+        if not self.select_mailbox(src):
+            continue
+
+        messages = self.get_messages()
+
+        for idx in messages:
+            self.move_message(self.get_uid(idx), dst)
+
+        self.log.info("Moved %d message(s) from %s -> %s",
+            len(messages),
+            src,
+            dst,
+        )
 
     def handle_rotate(self, template, target, start, stop):
         start = int(start)

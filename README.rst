@@ -17,7 +17,7 @@ Single-folder version of the above to move email for "after" work into your
 main inbox. Use this when you receive a non-work email during the day. To be
 run at, say, 6:15pm from ``cron(8)``::
 
-  $ tickle-me-email rotate Inbox.Mail.DELAYED.18h15 INBOX 0 1
+  $ tickle-me-email move Inbox.Mail.DELAYED.18h15 INBOX
 
 Send draft emails queued in the ``LATER.Evening``, moving them to ``Sent
 Items`` if successful. Use this to avoid getting replies "too" quickly. To be
