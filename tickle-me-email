@@ -75,11 +75,14 @@ class Command(object):
             print x.split(' "." ')[-1]
 
     def handle_rotate(self, template, target, start, stop):
-        for x in range(int(start), int(stop) + 1):
+        def render(x):
             try:
-                src = template % x
+                return template % x
             except TypeError:
-                src = template
+                return template
+
+        for x in range(int(start), int(stop) + 1):
+            src = render(x)
 
             if not self.select_mailbox(src):
                 continue
