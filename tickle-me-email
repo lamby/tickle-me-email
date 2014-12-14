@@ -101,7 +101,7 @@ class Command(object):
         # Rotate to final target
         self.handle_move(render(start), target)
 
-        for x in range(stop, start):
+        for x in range(start, stop):
             self.handle_move(render(x + 1), render(x))
 
     def handle_send_later(self, src, target):
