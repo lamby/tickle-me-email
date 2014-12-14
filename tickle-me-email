@@ -160,16 +160,11 @@ class Command(object):
         self.log.debug("Logging into to IMAP server")
         self.imap.login(self.options.imap_username, self.options.imap_password)
 
-        self.log.debug("Connecting to SMTP server %s", self.options.smtp_server)
-        self.smtp = smtplib.SMTP_SSL(self.options.smtp_server)
-
-        self.log.debug("Logging into SMTP server")
-        self.smtp.login(self.options.smtp_username, self.options.smtp_password)
-
     def disconnect(self):
         self.log.debug("Disconnecting")
 
-        self.smtp.quit()
+        if self.smtp is not None:
+            self.smtp.quit()
 
         try:
             self.imap.close()
@@ -177,6 +172,22 @@ class Command(object):
             pass
 
         self.imap.logout()
+
+    def sendmail(self, *args, **kwargs):
+        if self.smtp is None:
+            self.log.debug(
+                "Connecting to SMTP server %s",
+                self.options.smtp_server,
+            )
+            self.smtp = smtplib.SMTP_SSL(self.options.smtp_server)
+
+            self.log.debug("Logging into SMTP server")
+            self.smtp.login(
+                self.options.smtp_username,
+                self.options.smtp_password,
+            )
+
+        self.smtp.sendmail(*args, **kwargs)
 
     def flag_message(self, uid, name, enable):
         self.log.debug(
