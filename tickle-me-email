@@ -76,7 +76,7 @@ class Command(object):
 
     def handle_move(self, src, dst):
         if not self.select_mailbox(src):
-            continue
+            return
 
         messages = self.get_messages()
 
