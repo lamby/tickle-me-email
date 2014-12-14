@@ -157,7 +157,7 @@ class Command(object):
         self.log.debug("Connecting to IMAP server %s", self.options.imap_server)
         self.imap = imaplib.IMAP4_SSL(self.options.imap_server)
 
-        self.log.debug("Logging into to IMAP server")
+        self.log.debug("Logging into IMAP server")
         self.imap.login(self.options.imap_username, self.options.imap_password)
 
     def disconnect(self):
