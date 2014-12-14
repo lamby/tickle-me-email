@@ -30,6 +30,10 @@ Examples
 
     $ tickle-me-email list
 
+* Send a "TODO" email to yourself::
+
+    $ tickle-me-email todo chris@chris-lamb.co.uk "Empty recycle bin"
+
 
 Configuration
 -------------
