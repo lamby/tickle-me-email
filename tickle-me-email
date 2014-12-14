@@ -99,23 +99,11 @@ class Command(object):
             except TypeError:
                 return template
 
-        for x in range(start, stop + 1):
+        for x in range(low, high):
             src = render(x)
             dst = target if x == start else render(x - 1)
 
-            if not self.select_mailbox(src):
-                continue
-
-            messages = self.get_messages()
-
-            for idx in messages:
-                self.move_message(self.get_uid(idx), dst)
-
-            self.log.info("Moved %d message(s) from %s -> %s",
-                len(messages),
-                src,
-                dst,
-            )
+            self.handle_move(src, dst)
 
     def handle_send_later(self, src, target):
         if not self.select_mailbox(src):
