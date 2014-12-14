@@ -51,6 +51,12 @@ class Command(object):
                 except KeyError:
                     parser.error("missing environment variable %s" % key)
 
+            setattr(
+                self.options,
+                '%s_secure' % x,
+                '%s_SECURE' % x.upper() in os.environ,
+            )
+
         fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
 
         if len(inspect.getargspec(fn).args) - 1 != len(args):
@@ -154,8 +160,15 @@ class Command(object):
         self.log.addHandler(handler)
 
     def connect(self):
-        self.log.debug("Connecting to IMAP server %s", self.options.imap_server)
-        self.imap = imaplib.IMAP4_SSL(self.options.imap_server)
+        klass = imaplib.IMAP4_SSL if self.options.imap_secure \
+            else imaplib.IMAP4
+
+        self.log.debug(
+            "Connecting to IMAP server %s using %s",
+            self.options.imap_server,
+            klass,
+        )
+        self.imap = klass(self.options.imap_server)
 
         self.log.debug("Logging into IMAP server")
         self.imap.login(self.options.imap_username, self.options.imap_password)
@@ -175,11 +188,15 @@ class Command(object):
 
     def sendmail(self, *args, **kwargs):
         if self.smtp is None:
+            klass = smtplib.SMTP_SSL if self.options.smtp_secure \
+                else smtplib.SMTP
+
             self.log.debug(
-                "Connecting to SMTP server %s",
+                "Connecting to SMTP server %s using %s",
                 self.options.smtp_server,
+                klass,
             )
-            self.smtp = smtplib.SMTP_SSL(self.options.smtp_server)
+            self.smtp = klass(self.options.smtp_server)
 
             self.log.debug("Logging into SMTP server")
             self.smtp.login(
