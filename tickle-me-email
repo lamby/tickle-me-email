@@ -13,7 +13,7 @@ import email.utils
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'send_later', 'rotate')
+ACTIONS = ('list', 'send-later', 'rotate')
 
 class CommandError(Exception):
     pass
@@ -51,7 +51,7 @@ class Command(object):
                 except KeyError:
                     parser.error("missing environment variable %s" % key)
 
-        fn = getattr(self, 'handle_%s' % action)
+        fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
 
         if len(inspect.getargspec(fn).args) - 1 != len(args):
             parser.error("invalid number of arguments for action %s" % action)
