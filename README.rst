@@ -11,7 +11,7 @@ Examples
 Mail from ``DELAYED.01`` is moved to your main inbox. Use this to "put off"
 emails until a day they are important. To be run daily from ``cron(8)``::
 
-  $ tickle-me-email rotate Inbox.Mail.DELAYED.%02d INBOX 0 7
+  $ tickle-me-email rotate Inbox.Mail.DELAYED.%02d INBOX 1 7
 
 Single-folder version of the above to move email for "after" work into your
 main inbox. Use this when you receive a non-work email during the day. To be
