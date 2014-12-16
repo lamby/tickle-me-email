@@ -137,7 +137,7 @@ class Command(object):
                 ', '.join(recipients),
             )
 
-            self.smtp.sendmail(msg['from'], recipients, raw)
+            self.sendmail(msg['from'], recipients, raw)
 
             # Remove draft flag
             self.flag_message(uid, 'Draft', False)
