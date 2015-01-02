@@ -25,8 +25,8 @@ Examples
 
     $ tickle-me-email send-later INBOX.Mail.LATER.Evening "INBOX.Sent Items"
 
-* List all email inboxes. Use this to find out the "internal" names of your
-  IMAP inbox::
+* List all email mailboxes. Use this to find out the "internal" names of your
+  IMAP folders::
 
     $ tickle-me-email list
 
