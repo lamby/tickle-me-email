@@ -38,10 +38,6 @@ ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'config')
 class CommandError(Exception):
     pass
 
-def skip_imap_connect(fn):
-    fn.imap_connect = False
-    return fn
-
 class Command(object):
     def __init__(self):
         self.log = None
