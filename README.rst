@@ -77,5 +77,5 @@ Alternatively, you can define the following environment variables:
 * ``SMTP_USERNAME`` (eg. ``lamby``)
 * ``SMTP_PASSWORD`` (eg. ``secret``)
 
+* ``TODO_EMAIL`` (eg. ``TODO <your@email.com>``)
 * ``TODO_MAILBOX`` (eg. ``INBOX``)
-* ``TODO_RECIPIENT`` (eg. ``TODO <your@email.com>``)

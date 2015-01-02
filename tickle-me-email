@@ -171,8 +171,8 @@ class Command(object):
 
         self.log.debug("Creating TODO message")
         msg = email.message.Message()
-        msg['To'] = self.options.todo_recipient
-        msg['From'] = self.options.todo_recipient
+        msg['To'] = self.options.todo_email
+        msg['From'] = self.options.todo_email
         msg['Subject'] = subject
         msg.set_payload(subject)
 
@@ -200,7 +200,7 @@ class Command(object):
 
         print "TODO"
         print "===="
-        for x in ('mailbox', 'recipient'):
+        for x in ('mailbox', 'email'):
             print " %9s: %s" % (x, getattr(self.options, 'todo_%s' % x))
 
     ## Setup ##################################################################
@@ -252,8 +252,8 @@ class Command(object):
             setattr(self.options, '%s_secure' % x, val)
 
         for x, y in (
+            ('email', "TODO <nobody@example.com>"),
             ('mailbox', "INBOX"),
-            ('recipient', "TODO <nobody@example.com>"),
         ):
             val = from_config('get', 'todo', x) or y
 
