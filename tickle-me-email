@@ -37,8 +37,8 @@ class Command(object):
 
         self.options, args = parser.parse_args()
 
+        self.setup_config(parser)
         self.setup_logging()
-        self.load_config(parser)
 
         if not args:
             parser.error("must specify an action")
@@ -144,7 +144,7 @@ class Command(object):
 
     ## Utils ##################################################################
 
-    def load_config(self, parser):
+    def setup_config(self, parser):
         c = ConfigParser.ConfigParser()
 
         c.read([
