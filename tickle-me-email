@@ -33,7 +33,7 @@ from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo')
+ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'config')
 
 class CommandError(Exception):
     pass
@@ -157,6 +157,14 @@ class Command(object):
         msg.set_payload("TODO: %s" % txt)
 
         self.sendmail(recipient, (recipient,), msg)
+
+    def handle_config(self):
+        for x in ('imap', 'smtp'):
+            print '%s\n%s\n' % (x.upper(), "=" * len(x))
+
+            for y in ('server', 'username', 'password', 'secure'):
+                print ' %8s: %s' % (y, getattr(self.options, '%s_%s' % (x, y)))
+            print
 
     ## Utils ##################################################################
 
