@@ -67,7 +67,12 @@ class Command(object):
 
         fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
 
-        if len(inspect.getargspec(fn).args) - 1 != len(args):
+        if inspect.getargspec(fn).varargs:
+            if len(args) < 2:
+                parser.error(
+                    "insufficient number of arguments for action %s" % action
+                )
+        elif len(inspect.getargspec(fn).args) - 1 != len(args):
             parser.error("invalid number of arguments for action %s" % action)
 
         try:
