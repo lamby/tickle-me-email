@@ -36,6 +36,8 @@ class Command(object):
         parser.add_option('--verbosity', dest='verbosity', default=0, type='int')
 
         self.options, args = parser.parse_args()
+
+        self.setup_logging()
         self.load_config(parser)
 
         if not args:
@@ -51,8 +53,6 @@ class Command(object):
 
         if len(inspect.getargspec(fn).args) - 1 != len(args):
             parser.error("invalid number of arguments for action %s" % action)
-
-        self.setup_logging()
 
         try:
             self.connect()
