@@ -163,14 +163,16 @@ class Command(object):
 
             self.move_message(uid, target)
 
-    def handle_todo(self, recipient, txt):
+    def handle_todo(self, recipient, *txt):
         self.connect_smtp()
+
+        subject = "TODO: %s" % ' '.join(txt)
 
         msg = email.message.Message()
         msg['To'] = recipient
         msg['From'] = recipient
-        msg['Subject'] = "TODO: %s" % txt
-        msg.set_payload("TODO: %s" % txt)
+        msg['Subject'] = subject
+        msg.set_payload(subject)
 
         self.smtp.sendmail(recipient, (recipient,), msg.as_string())
 
