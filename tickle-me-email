@@ -197,6 +197,7 @@ class Command(object):
         self.imap.logout()
 
     def sendmail(self, *args, **kwargs):
+        # Lazily connect
         if self.smtp is None:
             klass = smtplib.SMTP_SSL if self.options.smtp_secure \
                 else smtplib.SMTP
