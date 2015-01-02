@@ -64,11 +64,11 @@ For example::
 Alternatively, you can define the following environment variables:
 
 * ``IMAP_SERVER`` (eg. ``imap.example.org``)
-* ``IMAP_SECURE`` (eg. ``true``)
+* ``IMAP_SECURE`` (eg. ``true``/``false``)
 * ``IMAP_USERNAME`` (eg. ``lamby``)
 * ``IMAP_PASSWORD`` (eg. ``secret``)
 
 * ``SMTP_SERVER`` (eg. ``smtp.example.org``)
-* ``SMTP_SECURE`` (eg. ``true``)
+* ``SMTP_SECURE`` (eg. ``true``/``false``)
 * ``SMTP_USERNAME`` (eg. ``lamby``)
 * ``SMTP_PASSWORD`` (eg. ``secret``)
