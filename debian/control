@@ -10,4 +10,5 @@ Architecture: all
 Depends:
   ${misc:Depends},
   python,
+  python-xdg,
 Description: Toolbox for implementing GTD-like behaviours in your IMAP inbox
