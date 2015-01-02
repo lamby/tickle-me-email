@@ -37,6 +37,7 @@ class Command(object):
         if not args:
             parser.error("must specify an action")
 
+        # Strip off action
         action, args = args[0], args[1:]
 
         if action not in ACTIONS:
