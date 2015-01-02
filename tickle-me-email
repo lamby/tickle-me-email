@@ -372,8 +372,14 @@ class Command(object):
 
         return int(self.parse(response))
 
-    def get_messages(self):
-        data = self.parse(self.imap.search(None, 'ALL'))
+    def get_messages(self, criterion='ALL'):
+        self.log.debug("Searching for messages matching %r", criterion)
+
+        response = self.imap.search(None, criterion)
+
+        self.check_response(response, "Error searching for messages")
+
+        data = self.parse(response)
 
         # Work in reverse as we could changing stuff, altering indices
         return [int(x) for x in reversed(data.split())]
