@@ -164,35 +164,44 @@ class Command(object):
 
             self.move_message(uid, target)
 
-    def handle_todo(self, recipient, *txt):
+    def handle_todo(self, *txt):
         self.connect_imap()
 
         subject = "TODO: %s" % ' '.join(txt)
 
         self.log.debug("Creating TODO message")
         msg = email.message.Message()
-        msg['To'] = recipient
-        msg['From'] = recipient
+        msg['To'] = self.options.todo_recipient
+        msg['From'] = self.options.todo_recipient
         msg['Subject'] = subject
         msg.set_payload(subject)
 
-        target = 'INBOX'
+        self.log.debug(
+            "Adding TODO message to mailbox %r",
+            self.options.todo_mailbox,
+        )
 
-        self.log.debug("Adding TODO message to mailbox %r", target)
-        self.imap.append(
-            target,
+        response = self.imap.append(
+            self.options.todo_mailbox,
             '\SEEN',
             imaplib.Time2Internaldate(time.time()),
             msg.as_string(),
         )
 
+        self.check_response(response, "Error adding TODO item")
+
     def handle_config(self):
         for x in ('imap', 'smtp'):
-            print '%s\n%s\n' % (x.upper(), "=" * len(x))
+            print "%s\n%s\n" % (x.upper(), "=" * len(x))
 
             for y in ('server', 'username', 'password', 'secure'):
-                print ' %8s: %s' % (y, getattr(self.options, '%s_%s' % (x, y)))
+                print " %8s: %s" % (y, getattr(self.options, '%s_%s' % (x, y)))
             print
+
+        print "TODO"
+        print "===="
+        for x in ('mailbox', 'recipient'):
+            print " %9s: %s" % (x, getattr(self.options, 'todo_%s' % x))
 
     ## Setup ##################################################################
 
@@ -241,6 +250,19 @@ class Command(object):
                 pass
 
             setattr(self.options, '%s_secure' % x, val)
+
+        for x, y in (
+            ('mailbox', "INBOX"),
+            ('recipient', "TODO <nobody@example.com>"),
+        ):
+            val = from_config('get', 'todo', x) or y
+
+            try:
+                val = os.environ['TODO_%s' % x.upper()]
+            except KeyError:
+                pass
+
+            setattr(self.options, 'todo_%s' % x, val)
 
     def setup_logging(self):
         self.log = logging.getLogger()

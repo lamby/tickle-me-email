@@ -32,7 +32,7 @@ Examples
 
 * Send a "TODO" email to yourself::
 
-    $ tickle-me-email todo chris@chris-lamb.co.uk "Empty recycle bin"
+    $ tickle-me-email todo Empty recycle bin
 
 * Print the current configuration::
 
@@ -61,6 +61,10 @@ For example::
     password=secret
     secure=true
 
+    [todo]
+    mailbox=INBOX
+    recipient=TODO <your@email.com>
+
 Alternatively, you can define the following environment variables:
 
 * ``IMAP_SERVER`` (eg. ``imap.example.org``)
@@ -72,3 +76,6 @@ Alternatively, you can define the following environment variables:
 * ``SMTP_SECURE`` (eg. ``true``/``false``)
 * ``SMTP_USERNAME`` (eg. ``lamby``)
 * ``SMTP_PASSWORD`` (eg. ``secret``)
+
+* ``TODO_MAILBOX`` (eg. ``INBOX``)
+* ``TODO_RECIPIENT`` (eg. ``TODO <your@email.com>``)
