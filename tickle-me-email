@@ -250,12 +250,12 @@ class Command(object):
         if self.smtp is not None:
             self.smtp.quit()
 
-        try:
-            self.imap.close()
-        except self.imap.error:
-            pass
-
-        self.imap.logout()
+        if self.imap is not None:
+            try:
+                self.imap.close()
+                self.imap.logout()
+            except self.imap.error:
+                pass
 
     def sendmail(self, *args, **kwargs):
         # Lazily connect
