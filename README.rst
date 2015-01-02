@@ -30,7 +30,7 @@ Examples
 
     $ tickle-me-email list
 
-* Send a "TODO" email to yourself::
+* Send a "TODO" email to yourself, injecting it via IMAP::
 
     $ tickle-me-email todo Empty recycle bin
 
