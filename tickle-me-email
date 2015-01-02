@@ -33,6 +33,7 @@ class Command(object):
         parser.add_option('--verbosity', dest='verbosity', default=0, type='int')
 
         self.options, args = parser.parse_args()
+        self.load_config(parser)
 
         if not args:
             parser.error("must specify an action")
@@ -42,22 +43,6 @@ class Command(object):
 
         if action not in ACTIONS:
             parser.error("invalid action %r" % action)
-
-        # Parse environment for authentication details
-        for x in ('imap', 'smtp'):
-            for y in ('server', 'username', 'password'):
-                key = '%s_%s' % (x.upper(), y.upper())
-
-                try:
-                    setattr(self.options, '%s_%s' % (x, y), os.environ[key])
-                except KeyError:
-                    parser.error("missing environment variable %s" % key)
-
-            setattr(
-                self.options,
-                '%s_secure' % x,
-                '%s_SECURE' % x.upper() in os.environ,
-            )
 
         fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
 
@@ -155,6 +140,33 @@ class Command(object):
         self.sendmail(recipient, (recipient,), msg)
 
     ## Utils ##################################################################
+
+    def load_config(self, parser):
+        types = ('imap', 'smtp')
+        params = ('server', 'username', 'password')
+
+        # Parse environment
+        for x in types:
+            for y in params:
+                key = '%s_%s' % (x.upper(), y.upper())
+
+                try:
+                    setattr(self.options, '%s_%s' % (x, y), os.environ[key])
+                except KeyError:
+                    pass
+
+            setattr(
+                self.options,
+                '%s_secure' % x,
+                '%s_SECURE' % x.upper() in os.environ,
+            )
+
+        # Check we have all the settings we need
+        for x in types:
+            for y in params:
+                if hasattr(self.options, '%s_%s' % (x, y)):
+                    continue
+                parser.error("missing %r config option for %s" % (y, x.upper()))
 
     def setup_logging(self):
         self.log = logging.getLogger()
