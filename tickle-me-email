@@ -164,10 +164,10 @@ class Command(object):
 
             self.move_message(uid, target)
 
-    def handle_todo(self, *txt):
+    def handle_todo(self, *args):
         self.connect_imap()
 
-        subject = "TODO: %s" % ' '.join(txt)
+        subject = "TODO: %s" % ' '.join(args)
 
         self.log.debug("Creating TODO message")
         msg = email.message.Message()
