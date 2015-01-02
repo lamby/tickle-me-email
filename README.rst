@@ -34,6 +34,10 @@ Examples
 
     $ tickle-me-email todo chris@chris-lamb.co.uk "Empty recycle bin"
 
+* Print the current configuration::
+
+    $ tickle-me-email config
+
 
 Configuration
 -------------
