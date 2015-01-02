@@ -167,7 +167,7 @@ class Command(object):
         msg['Subject'] = "TODO: %s" % txt
         msg.set_payload("TODO: %s" % txt)
 
-        self.smtp.sendmail(recipient, (recipient,), msg)
+        self.smtp.sendmail(recipient, (recipient,), msg.as_string())
 
     def handle_config(self):
         for x in ('imap', 'smtp'):
