@@ -218,16 +218,15 @@ class Command(object):
                 setattr(self.options, '%s_%s' % (x, y), val)
 
             # Check secure flag, allowing environment to override
-            val = False
+            val = from_config('getboolean', x, 'secure') or False
 
-            for y in (
-                from_config('getboolean', x, 'secure'),
-                os.environ.get('%s_SECURE' % x.upper(), None),
-            ):
-                try:
-                    val = {'0': False, '1': True}[y]
-                except KeyError:
-                    pass
+            try:
+                val = {
+                    '0': False,
+                    '1': True,
+                }[os.environ.get('%s_SECURE' % x.upper())]
+            except KeyError:
+                pass
 
             setattr(self.options, '%s_secure' % x, val)
 
