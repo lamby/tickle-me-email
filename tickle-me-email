@@ -38,6 +38,10 @@ ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'config')
 class CommandError(Exception):
     pass
 
+def skip_imap_connect(fn):
+    fn.imap_connect = False
+    return fn
+
 class Command(object):
     def __init__(self):
         self.log = None
@@ -71,7 +75,9 @@ class Command(object):
             parser.error("invalid number of arguments for action %s" % action)
 
         try:
-            self.connect()
+            if getattr(fn, 'imap_connect', True):
+                self.connect()
+
             fn(*args)
             self.disconnect()
         except CommandError, exc:
@@ -149,6 +155,7 @@ class Command(object):
 
             self.move_message(uid, target)
 
+    @skip_imap_connect
     def handle_todo(self, recipient, txt):
         msg = email.message.Message()
         msg['To'] = recipient
@@ -158,6 +165,7 @@ class Command(object):
 
         self.sendmail(recipient, (recipient,), msg)
 
+    @skip_imap_connect
     def handle_config(self):
         for x in ('imap', 'smtp'):
             print '%s\n%s\n' % (x.upper(), "=" * len(x))
