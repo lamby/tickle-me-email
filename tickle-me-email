@@ -176,9 +176,9 @@ class Command(object):
             for x in (BaseDirectory.xdg_config_home, '/etc')
         ])
 
-        def from_config(x, y):
+        def from_config(method, x, y):
             try:
-                return c.get(x, y)
+                return getattr(c, method)(x, y)
             except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
                 return None
 
@@ -187,7 +187,7 @@ class Command(object):
                 val = None
 
                 # Try config file
-                val = from_config(x, y)
+                val = from_config('get', x, y)
 
                 # Allow os.environ to override
                 try:
@@ -206,7 +206,7 @@ class Command(object):
             val = False
 
             for y in (
-                from_config(x, 'secure'),
+                from_config('getboolean', x, 'secure'),
                 os.environ.get('%s_SECURE' % x.upper(), None),
             ):
                 try:
