@@ -75,9 +75,6 @@ class Command(object):
             parser.error("invalid number of arguments for action %s" % action)
 
         try:
-            if getattr(fn, 'imap_connect', True):
-                self.connect_imap()
-
             fn(*args)
             self.disconnect()
         except CommandError, exc:
@@ -89,10 +86,14 @@ class Command(object):
     ## Actions ################################################################
 
     def handle_list(self):
+        self.connect_imap()
+
         for x in self.imap.list()[1]:
             print x.split(' "." ')[-1]
 
     def handle_move(self, src, dst):
+        self.connect_imap()
+
         if not self.select_mailbox(src):
             return
 
@@ -108,6 +109,8 @@ class Command(object):
         )
 
     def handle_rotate(self, template, start, stop, target):
+        self.connect_imap()
+
         start, stop = int(start), int(stop)
 
         def render(x):
@@ -123,10 +126,14 @@ class Command(object):
             self.handle_move(render(x + 1), render(x))
 
     def handle_send_later(self, src, target):
+        self.connect_imap()
+
         if not self.select_mailbox(src):
             return
 
         for idx in self.get_messages():
+            self.connect_smtp()
+
             uid = self.get_uid(idx)
 
             raw = self.parse(self.imap.fetch(idx, '(RFC822)'))[1]
@@ -148,24 +155,24 @@ class Command(object):
                 ', '.join(recipients),
             )
 
-            self.sendmail(msg['from'], recipients, raw)
+            self.smtp.sendmail(msg['from'], recipients, raw)
 
             # Remove draft flag
             self.flag_message(uid, 'Draft', False)
 
             self.move_message(uid, target)
 
-    @skip_imap_connect
     def handle_todo(self, recipient, txt):
+        self.connect_smtp()
+
         msg = email.message.Message()
         msg['To'] = recipient
         msg['From'] = recipient
         msg['Subject'] = "TODO: %s" % txt
         msg.set_payload("TODO: %s" % txt)
 
-        self.sendmail(recipient, (recipient,), msg)
+        self.smtp.sendmail(recipient, (recipient,), msg)
 
-    @skip_imap_connect
     def handle_config(self):
         for x in ('imap', 'smtp'):
             print '%s\n%s\n' % (x.upper(), "=" * len(x))
@@ -241,6 +248,9 @@ class Command(object):
     ## Connect ################################################################
 
     def connect_imap(self):
+        if self.imap is not None:
+            return
+
         klass = imaplib.IMAP4_SSL if self.options.imap_secure \
             else imaplib.IMAP4
 
@@ -255,6 +265,9 @@ class Command(object):
         self.imap.login(self.options.imap_username, self.options.imap_password)
 
     def connect_smtp(self):
+        if self.smtp is not None:
+            return
+
         klass = smtplib.SMTP_SSL if self.options.smtp_secure \
             else smtplib.SMTP
 
@@ -285,13 +298,6 @@ class Command(object):
                 pass
 
     ## Utilities ##############################################################
-
-    def sendmail(self, *args, **kwargs):
-        # Lazily connect
-        if self.smtp is None:
-            self.connect_smtp()
-
-        self.smtp.sendmail(*args, **kwargs)
 
     def flag_message(self, uid, name, enable):
         self.log.debug(
