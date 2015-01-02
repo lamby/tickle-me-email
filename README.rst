@@ -49,13 +49,13 @@ For example::
     server=imap.example.org
     username=lamby
     password=secret
-    secure=1
+    secure=true
 
     [smtp]
     server=smtp.example.org
     username=lamby
     password=secret
-    secure=1
+    secure=true
 
 Alternatively, you can define the following environment variables:
 
