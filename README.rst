@@ -60,11 +60,11 @@ For example::
 Alternatively, you can define the following environment variables:
 
 * ``IMAP_SERVER`` (eg. ``imap.example.org``)
-* ``IMAP_SECURE`` (to connect via SSL)
+* ``IMAP_SECURE`` (eg. ``true``)
 * ``IMAP_USERNAME`` (eg. ``lamby``)
 * ``IMAP_PASSWORD`` (eg. ``secret``)
 
 * ``SMTP_SERVER`` (eg. ``smtp.example.org``)
-* ``SMTP_SECURE`` (to connect via SSL)
+* ``SMTP_SECURE`` (eg. ``true``)
 * ``SMTP_USERNAME`` (eg. ``lamby``)
 * ``SMTP_PASSWORD`` (eg. ``secret``)

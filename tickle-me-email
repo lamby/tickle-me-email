@@ -221,12 +221,9 @@ class Command(object):
             val = from_config('getboolean', x, 'secure') or False
 
             try:
-                val = {
-                    '0': False,
-                    '1': True,
-                    'true': True,
-                    'false': False,
-                }[os.environ.get('%s_SECURE' % x.upper(), '').lower()]
+                k = os.environ['%s_SECURE' % x.upper()].lower()
+
+                val = {'true': True, 'false': False}[k]
             except KeyError:
                 pass
 
