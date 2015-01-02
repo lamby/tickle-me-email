@@ -76,7 +76,7 @@ class Command(object):
 
         try:
             if getattr(fn, 'imap_connect', True):
-                self.connect()
+                self.connect_imap()
 
             fn(*args)
             self.disconnect()
@@ -238,7 +238,7 @@ class Command(object):
         )
         self.log.addHandler(handler)
 
-    def connect(self):
+    def connect_imap(self):
         klass = imaplib.IMAP4_SSL if self.options.imap_secure \
             else imaplib.IMAP4
 
@@ -251,6 +251,23 @@ class Command(object):
 
         self.log.debug("Logging into IMAP server")
         self.imap.login(self.options.imap_username, self.options.imap_password)
+
+    def connect_smtp(self):
+        klass = smtplib.SMTP_SSL if self.options.smtp_secure \
+            else smtplib.SMTP
+
+        self.log.debug(
+            "Connecting to SMTP server %s using %s",
+            self.options.smtp_server,
+            klass,
+        )
+        self.smtp = klass(self.options.smtp_server)
+
+        self.log.debug("Logging into SMTP server")
+        self.smtp.login(
+            self.options.smtp_username,
+            self.options.smtp_password,
+        )
 
     def disconnect(self):
         self.log.debug("Disconnecting")
@@ -268,21 +285,7 @@ class Command(object):
     def sendmail(self, *args, **kwargs):
         # Lazily connect
         if self.smtp is None:
-            klass = smtplib.SMTP_SSL if self.options.smtp_secure \
-                else smtplib.SMTP
-
-            self.log.debug(
-                "Connecting to SMTP server %s using %s",
-                self.options.smtp_server,
-                klass,
-            )
-            self.smtp = klass(self.options.smtp_server)
-
-            self.log.debug("Logging into SMTP server")
-            self.smtp.login(
-                self.options.smtp_username,
-                self.options.smtp_password,
-            )
+            self.connect_smtp()
 
         self.smtp.sendmail(*args, **kwargs)
 
