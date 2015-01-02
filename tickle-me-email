@@ -174,7 +174,7 @@ class Command(object):
                 print ' %8s: %s' % (y, getattr(self.options, '%s_%s' % (x, y)))
             print
 
-    ## Utils ##################################################################
+    ## Setup ##################################################################
 
     def setup_config(self, parser):
         c = ConfigParser.ConfigParser()
@@ -238,6 +238,8 @@ class Command(object):
         )
         self.log.addHandler(handler)
 
+    ## Connect ################################################################
+
     def connect_imap(self):
         klass = imaplib.IMAP4_SSL if self.options.imap_secure \
             else imaplib.IMAP4
@@ -281,6 +283,8 @@ class Command(object):
                 self.imap.logout()
             except self.imap.error:
                 pass
+
+    ## Utilities ##############################################################
 
     def sendmail(self, *args, **kwargs):
         # Lazily connect
@@ -344,8 +348,6 @@ class Command(object):
             raise CommandError("Could not parse UID from %r" % txt)
 
         return int(m.group('uid'))
-
-    #
 
     def parse(self, val):
         return val[1][0]
