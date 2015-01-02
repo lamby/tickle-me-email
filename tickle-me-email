@@ -10,7 +10,10 @@ import smtplib
 import logging
 import optparse
 import email.utils
+import ConfigParser
 import email.message
+
+from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
@@ -142,31 +145,52 @@ class Command(object):
     ## Utils ##################################################################
 
     def load_config(self, parser):
-        types = ('imap', 'smtp')
-        params = ('server', 'username', 'password')
+        c = ConfigParser.ConfigParser()
 
-        # Parse environment
-        for x in types:
-            for y in params:
-                key = '%s_%s' % (x.upper(), y.upper())
+        c.read([
+            os.path.join(x, 'tickle-me-email', 'tickle-me-email.cfg')
+            for x in (BaseDirectory.xdg_config_home, '/etc')
+        ])
 
+        def from_config(x, y):
+            try:
+                return c.get(x, y)
+            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+                return None
+
+        for x in ('imap', 'smtp'):
+            for y in ('server', 'username', 'password'):
+                val = None
+
+                # Try config file
+                val = from_config(x, y)
+
+                # Allow os.environ to override
                 try:
-                    setattr(self.options, '%s_%s' % (x, y), os.environ[key])
+                    val = os.environ['%s_%s' % (x.upper(), y.upper())]
                 except KeyError:
                     pass
 
-            setattr(
-                self.options,
-                '%s_secure' % x,
-                '%s_SECURE' % x.upper() in os.environ,
-            )
+                if val is None:
+                    parser.error(
+                        "missing %r config option for %s" % (y, x.upper())
+                    )
 
-        # Check we have all the settings we need
-        for x in types:
-            for y in params:
-                if hasattr(self.options, '%s_%s' % (x, y)):
-                    continue
-                parser.error("missing %r config option for %s" % (y, x.upper()))
+                setattr(self.options, '%s_%s' % (x, y), val)
+
+            # Check secure flag, allowing environment to override
+            val = False
+
+            for y in (
+                from_config(x, 'secure'),
+                os.environ.get('%s_SECURE' % x.upper(), None),
+            ):
+                try:
+                    val = {'0': False, '1': True}[y]
+                except KeyError:
+                    pass
+
+            setattr(self.options, '%s_secure' % x, val)
 
     def setup_logging(self):
         self.log = logging.getLogger()

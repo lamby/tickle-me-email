@@ -38,7 +38,26 @@ Examples
 Configuration
 -------------
 
-You need to set the following environment variables:
+You configure ``tickle-me-email`` via the optional configuration files:
+
+* ``~/.config/tickle-me-email.cfg``
+* ``/etc/tickle-me-email/tickle-me-email.cfg``
+
+For example::
+
+    [imap]
+    server=imap.example.org
+    username=lamby
+    password=secret
+    secure=1
+
+    [smtp]
+    server=smtp.example.org
+    username=lamby
+    password=secret
+    secure=1
+
+Alternatively, you can define the following environment variables:
 
 * ``IMAP_SERVER`` (eg. ``imap.example.org``)
 * ``IMAP_SECURE`` (to connect via SSL)
