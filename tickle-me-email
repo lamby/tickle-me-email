@@ -167,7 +167,7 @@ class Command(object):
 
         self.log.debug("Creating TODO message")
 
-        subject = "%s%s" % (self.options.todo_prefix, ' '.join(args))
+        subject = "%s %s" % (self.options.todo_prefix, ' '.join(args))
 
         msg = email.message.Message()
         msg['To'] = self.options.todo_email
@@ -199,10 +199,11 @@ class Command(object):
         for idx in self.get_messages('(FROM "%s")' % self.options.todo_email):
             raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
 
-            val = email.message_from_string(raw)['Subject']
-            val = val.strip()
-            val = val[len(self.options.todo_prefix):]
-            val = val.strip()
+            # Get subject
+            val = email.message_from_string(raw)['Subject'].strip()
+
+            # Strip prefix
+            val = val[len(self.options.todo_prefix):].strip()
 
             entries.append(val)
 
