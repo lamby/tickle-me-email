@@ -69,12 +69,8 @@ class Command(object):
 
         fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
 
-        if inspect.getargspec(fn).varargs:
-            if not args:
-                parser.error(
-                    "insufficient number of arguments for action %s" % action
-                )
-        elif len(inspect.getargspec(fn).args) - 1 != len(args):
+        if not inspect.getargspec(fn).varargs and \
+                len(inspect.getargspec(fn).args) - 1 != len(args):
             parser.error("invalid number of arguments for action %s" % action)
 
         try:
@@ -166,6 +162,10 @@ class Command(object):
             self.move_message(uid, target)
 
     def handle_todo(self, *args):
+        if not args:
+            self.handle_todo_list()
+            return
+
         self.connect_imap()
 
         subject = "TODO: %s" % ' '.join(args)
