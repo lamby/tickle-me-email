@@ -34,7 +34,8 @@ from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'config')
+ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'todo_list',
+    'config')
 
 class CommandError(Exception):
     pass
@@ -189,6 +190,25 @@ class Command(object):
         )
 
         self.check_response(response, "Error adding TODO item")
+
+    def handle_todo_list(self):
+        self.connect_imap()
+
+        if not self.select_mailbox(self.options.todo_mailbox):
+            return
+
+        messages = self.get_messages('(FROM "%s")' % self.options.todo_email)
+
+        for idx in messages:
+            uid = self.get_uid(idx)
+
+            raw = self.parse(
+                self.imap.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')
+            )[1]
+
+            msg = email.message_from_string(raw)
+
+            print "\xe2\x80\xa2 %s" % msg['Subject'][len("TODO: "):]
 
     def handle_config(self):
         for x in ('imap', 'smtp'):
