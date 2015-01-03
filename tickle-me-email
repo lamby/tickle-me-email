@@ -134,10 +134,7 @@ class Command(object):
             self.connect_smtp()
 
             uid = self.get_uid(idx)
-
-            raw = self.parse(self.imap.fetch(idx, '(RFC822)'))[1]
-
-            msg = email.message_from_string(raw)
+            msg = email.message_from_string(self.fetch(idx, '(RFC822)')[1])
 
             # Don't reveal the original date
             del msg['date']
@@ -200,9 +197,7 @@ class Command(object):
         messages = self.get_messages('(FROM "%s")' % self.options.todo_email)
 
         for idx in messages:
-            raw = self.parse(
-                self.imap.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')
-            )[1]
+            raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
 
             msg = email.message_from_string(raw)
 
@@ -416,7 +411,7 @@ class Command(object):
         return self.parse(response)
 
     def get_uid(self, idx):
-        txt = self.parse(self.imap.fetch(idx, '(UID)'))
+        txt = self.fetch(idx, '(UID)')
 
         m = re_uid.match(txt)
 
