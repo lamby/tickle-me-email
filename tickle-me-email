@@ -219,6 +219,7 @@ class Command(object):
 
         print "TODO"
         print "===="
+        print
         for x in ('mailbox', 'email', 'prefix'):
             print " %9s: %s" % (x, getattr(self.options, 'todo_%s' % x))
 
