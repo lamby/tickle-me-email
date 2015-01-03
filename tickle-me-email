@@ -165,9 +165,10 @@ class Command(object):
 
         self.connect_imap()
 
-        subject = "TODO: %s" % ' '.join(args)
-
         self.log.debug("Creating TODO message")
+
+        subject = "%s%s" % (self.options.todo_prefix, ' '.join(args))
+
         msg = email.message.Message()
         msg['To'] = self.options.todo_email
         msg['From'] = self.options.todo_email
@@ -197,9 +198,13 @@ class Command(object):
         entries = []
         for idx in self.get_messages('(FROM "%s")' % self.options.todo_email):
             raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
-            msg = email.message_from_string(raw)
 
-            entries.append(msg['Subject'][len("TODO: "):])
+            val = email.message_from_string(raw)['Subject']
+            val = val.strip()
+            val = val[len(self.options.todo_prefix):]
+            val = val.strip()
+
+            entries.append(val)
 
         for x in sorted(entries):
             print " \xe2\x80\xa2 %s" % x
@@ -214,7 +219,7 @@ class Command(object):
 
         print "TODO"
         print "===="
-        for x in ('mailbox', 'email'):
+        for x in ('mailbox', 'email', 'prefix'):
             print " %9s: %s" % (x, getattr(self.options, 'todo_%s' % x))
 
     ## Setup ##################################################################
@@ -267,6 +272,7 @@ class Command(object):
 
         for x, y in (
             ('email', "TODO <nobody@example.com>"),
+            ('prefix', "TODO: "),
             ('mailbox', "INBOX"),
         ):
             val = from_config('get', 'todo', x) or y

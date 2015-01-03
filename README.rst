@@ -78,4 +78,5 @@ Alternatively, you can define the following environment variables:
 * ``SMTP_PASSWORD`` (eg. ``secret``)
 
 * ``TODO_EMAIL`` (eg. ``TODO <your@email.com>``)
+* ``TODO_PREFIX`` (eg. ``TODO: ``)
 * ``TODO_MAILBOX`` (eg. ``INBOX``)
