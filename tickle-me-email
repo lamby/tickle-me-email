@@ -194,14 +194,15 @@ class Command(object):
         if not self.select_mailbox(self.options.todo_mailbox):
             return
 
-        messages = self.get_messages('(FROM "%s")' % self.options.todo_email)
-
-        for idx in messages:
+        entries = []
+        for idx in self.get_messages('(FROM "%s")' % self.options.todo_email):
             raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
-
             msg = email.message_from_string(raw)
 
-            print " \xe2\x80\xa2 %s" % msg['Subject'][len("TODO: "):]
+            entries.append(msg['Subject'][len("TODO: "):])
+
+        for x in sorted(entries):
+            print " \xe2\x80\xa2 %s" % x
 
     def handle_config(self):
         for x in ('imap', 'smtp'):
