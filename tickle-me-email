@@ -34,8 +34,7 @@ from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'todo_list',
-    'config')
+ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'config')
 
 class CommandError(Exception):
     pass
@@ -159,14 +158,15 @@ class Command(object):
             self.move_message(uid, target)
 
     def handle_todo(self, *args):
+        self.connect_imap()
+
         if not args:
-            self.handle_todo_list()
+            for x in sorted(self.get_todo_list()):
+                print " \xe2\x80\xa2 %s" % x
             return
 
         if args == ('-',):
             args = (sys.stdin.read(),)
-
-        self.connect_imap()
 
         self.log.debug("Creating TODO message")
 
@@ -191,28 +191,6 @@ class Command(object):
         )
 
         self.check_response(response, "Error adding TODO item")
-
-    def handle_todo_list(self):
-        self.connect_imap()
-
-        if not self.select_mailbox(self.options.todo_mailbox):
-            return
-
-        entries = []
-        for idx in self.get_messages('(FROM "%s")' % self.options.todo_email):
-            raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
-
-            # Get subject
-            val = email.message_from_string(raw)['Subject'].strip()
-
-            # Strip prefix
-            val = val[len(self.options.todo_prefix):].strip()
-
-            entries.append(val)
-
-        for x in sorted(entries):
-            print " \xe2\x80\xa2 %s" % x
-
     def handle_config(self):
         for x in ('imap', 'smtp'):
             print "%s\n%s\n" % (x.upper(), "=" * len(x))
@@ -431,6 +409,21 @@ class Command(object):
             raise CommandError("Could not parse UID from %r" % txt)
 
         return int(m.group('uid'))
+
+    def get_todo_list(self):
+        if not self.select_mailbox(self.options.todo_mailbox):
+            return
+
+        for idx in self.get_messages('(FROM "%s")' % self.options.todo_email):
+            raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
+
+            # Get subject
+            val = email.message_from_string(raw)['Subject'].strip()
+
+            # Strip prefix
+            val = val[len(self.options.todo_prefix):].strip()
+
+            yield val
 
     def parse(self, val):
         return val[1][0]
