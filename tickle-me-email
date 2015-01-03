@@ -402,6 +402,19 @@ class Command(object):
         # Work in reverse as we could changing stuff, altering indices
         return [int(x) for x in reversed(data.split())]
 
+    def fetch(self, idx, parts):
+        self.log.debug(
+            "Fetching message idx %d with parts %r",
+            idx,
+            parts,
+        )
+
+        response = self.imap.fetch(idx, parts)
+
+        self.check_response(response, "Error fetching messages")
+
+        return self.parse(response)
+
     def get_uid(self, idx):
         txt = self.parse(self.imap.fetch(idx, '(UID)'))
 
