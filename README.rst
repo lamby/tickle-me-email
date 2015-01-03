@@ -34,6 +34,10 @@ Examples
 
     $ tickle-me-email todo Empty recycle bin
 
+  or::
+
+    $ echo Empty recycle bin | tickle-me-email todo
+
 * Print the current configuration::
 
     $ tickle-me-email config

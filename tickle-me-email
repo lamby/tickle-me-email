@@ -163,6 +163,9 @@ class Command(object):
             self.handle_todo_list()
             return
 
+        if args == ('-',):
+            args = (sys.stdin.read(),)
+
         self.connect_imap()
 
         self.log.debug("Creating TODO message")
