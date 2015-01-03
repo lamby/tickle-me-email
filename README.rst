@@ -36,7 +36,7 @@ Examples
 
   or::
 
-    $ echo Empty recycle bin | tickle-me-email todo
+    $ echo Empty recycle bin | tickle-me-email todo -
 
 * Print the current "TODO" list::
 
