@@ -200,8 +200,6 @@ class Command(object):
         messages = self.get_messages('(FROM "%s")' % self.options.todo_email)
 
         for idx in messages:
-            uid = self.get_uid(idx)
-
             raw = self.parse(
                 self.imap.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')
             )[1]
