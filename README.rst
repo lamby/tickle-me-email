@@ -7,6 +7,18 @@ Toolbox for implementing GTD-like behaviours in your IMAP inbox.
 Examples
 --------
 
+* Print the current "TODO" list::
+
+    $ tickle-me-email todo
+
+* Send a "TODO" email to yourself, injecting it via IMAP::
+
+    $ tickle-me-email todo Empty recycle bin
+
+  or::
+
+    $ echo Empty recycle bin | tickle-me-email todo -
+
 * "Tickler" file email rotation from ``DELAYED.07`` to ``DELAYED.06`` etc.
   Mail from ``DELAYED.01`` is moved to your main inbox. Use this to "put off"
   emails until a day they are important. To be run daily from ``cron(8)``::
@@ -29,18 +41,6 @@ Examples
   IMAP folders::
 
     $ tickle-me-email list
-
-* Send a "TODO" email to yourself, injecting it via IMAP::
-
-    $ tickle-me-email todo Empty recycle bin
-
-  or::
-
-    $ echo Empty recycle bin | tickle-me-email todo -
-
-* Print the current "TODO" list::
-
-    $ tickle-me-email todo
 
 * Print the current configuration::
 
