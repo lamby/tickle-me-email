@@ -208,7 +208,7 @@ class Command(object):
 
             msg = email.message_from_string(raw)
 
-            print "\xe2\x80\xa2 %s" % msg['Subject'][len("TODO: "):]
+            print " \xe2\x80\xa2 %s" % msg['Subject'][len("TODO: "):]
 
     def handle_config(self):
         for x in ('imap', 'smtp'):
