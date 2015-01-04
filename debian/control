@@ -2,13 +2,14 @@ Source: tickle-me-email
 Section: net
 Priority: optional
 Maintainer: Chris Lamb <chris@chris-lamb.co.uk>
-Build-Depends: debhelper (>= 7.0.50~)
+Build-Depends: debhelper (>= 8), python, dh-python
 Standards-Version: 3.9.6
 
 Package: tickle-me-email
 Architecture: all
 Depends:
   ${misc:Depends},
+  ${python:Depends},
   python,
   python-xdg,
 Description: Toolbox for implementing GTD-like behaviours in your IMAP inbox
