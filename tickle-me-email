@@ -170,7 +170,7 @@ class Command(object):
 
         self.log.debug("Creating TODO message")
 
-        subject = "%s %s" % (self.options.todo_prefix, ' '.join(args))
+        subject = "%s%s" % (self.options.todo_prefix, ' '.join(args))
 
         msg = email.message.Message()
         msg['To'] = self.options.todo_email
