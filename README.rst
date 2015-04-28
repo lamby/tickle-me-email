@@ -52,7 +52,7 @@ Configuration
 
 You configure ``tickle-me-email`` via the optional configuration files:
 
-* ``~/.config/tickle-me-email.cfg``
+* ``~/.config/tickle-me-email/tickle-me-email.cfg``
 * ``/etc/tickle-me-email/tickle-me-email.cfg``
 
 For example::
