@@ -1,5 +1,6 @@
 setup_args = dict(
     name='tickle-me-email',
+    version=1,
     author='Chris Lamb',
     author_email='chris@chris-lamb.co.uk',
     scripts=(
