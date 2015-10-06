@@ -1,16 +1,12 @@
-setup_args = dict(
+from setuptools import setup
+
+setup(
     name='tickle-me-email',
-    version=1,
+    version=2,
+    url='https://chris-lamb.co.uk/projects/tickle-me-email',
     author='Chris Lamb',
     author_email='chris@chris-lamb.co.uk',
     scripts=(
         'tickle-me-email',
     ),
 )
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-
-setup(**setup_args)
