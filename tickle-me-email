@@ -254,19 +254,19 @@ class Command(object):
 
             setattr(self.options, '%s_secure' % x, val)
 
-        for x, y in (
-            ('email', "TODO <nobody@example.com>"),
-            ('prefix', "TODO: "),
-            ('mailbox', "INBOX"),
+        for x, y, z in (
+            ('todo', 'email', "TODO <nobody@example.com>"),
+            ('todo', 'prefix', "TODO: "),
+            ('todo', 'mailbox', "INBOX"),
         ):
-            val = from_config('get', 'todo', x) or y
+            val = from_config('get', 'todo', y) or z
 
             try:
-                val = os.environ['TODO_%s' % x.upper()]
+                val = os.environ['%s_%s' % (x.upper(), y.upper())]
             except KeyError:
                 pass
 
-            setattr(self.options, 'todo_%s' % x, val)
+            setattr(self.options, '%s_%s' % (x, y), val)
 
     def setup_logging(self):
         self.log = logging.getLogger()
