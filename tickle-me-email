@@ -191,6 +191,7 @@ class Command(object):
         )
 
         self.check_response(response, "Error adding TODO item")
+
     def handle_config(self):
         for x in ('imap', 'smtp'):
             print "%s\n%s\n" % (x.upper(), "=" * len(x))
