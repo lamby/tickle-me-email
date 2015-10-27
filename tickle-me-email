@@ -34,7 +34,7 @@ from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'config')
+ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'draft', 'config')
 
 class CommandError(Exception):
     pass
@@ -192,6 +192,31 @@ class Command(object):
 
         self.check_response(response, "Error adding TODO item")
 
+    def handle_draft(self, *args):
+        self.connect_imap()
+
+        self.log.debug("Creating draft message")
+
+        if args == ('-',):
+            args = (sys.stdin.read(),)
+
+        msg = email.message.Message()
+        msg.set_payload(' '.join(args))
+
+        self.log.debug(
+            "Adding draft message to mailbox %r",
+            self.options.draft_mailbox,
+        )
+
+        response = self.imap.append(
+            self.options.draft_mailbox,
+            '\DRAFT',
+            imaplib.Time2Internaldate(time.time()),
+            msg.as_string(),
+        )
+
+        self.check_response(response, "Error adding draft item")
+
     def handle_config(self):
         for x in ('imap', 'smtp'):
             print "%s\n%s\n" % (x.upper(), "=" * len(x))
@@ -258,6 +283,7 @@ class Command(object):
             ('todo', 'email', "TODO <nobody@example.com>"),
             ('todo', 'prefix', "TODO: "),
             ('todo', 'mailbox', "INBOX"),
+            ('draft', 'mailbox', "INBOX.Drafts"),
         ):
             val = from_config('get', 'todo', y) or z
 
