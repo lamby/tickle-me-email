@@ -42,6 +42,10 @@ Examples
 
     $ tickle-me-email list
 
+* Insert an email into your drafts folder::
+
+    $ DRAFT_ATTACHMENT="/path/to/attachment.txt" tickle-me-email drafts - < /path/to/body.txt
+
 * Print the current configuration::
 
     $ tickle-me-email config
@@ -73,6 +77,10 @@ For example::
     mailbox=INBOX
     recipient=TODO <your@email.com>
 
+    [draft]
+    mailbox=INBOX.Drafts
+    subject=Default draft subject
+
 Alternatively, you can define the following environment variables:
 
 * ``IMAP_SERVER`` (eg. ``imap.example.org``)
@@ -88,3 +96,10 @@ Alternatively, you can define the following environment variables:
 * ``TODO_EMAIL`` (eg. ``TODO <your@email.com>``)
 * ``TODO_PREFIX`` (eg. ``TODO: ``)
 * ``TODO_MAILBOX`` (eg. ``INBOX``)
+
+* ``DRAFT_TO`` (eg. ``someone@example.org``)
+* ``DRAFT_CC`` (eg. ``someone-else@example.org``)
+* ``DRAFT_BCC`` (eg. ``someone-else2@example.org``)
+* ``DRAFT_SUBJECT`` (eg. ``Draft subject``)
+* ``DRAFT_MAILBOX`` (eg. ``INBOX.Drafts``)
+* ``DRAFT_ATTACHMENT`` (eg. ``/path/to/filename.txt``)

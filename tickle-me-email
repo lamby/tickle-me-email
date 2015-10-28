@@ -26,9 +26,13 @@ import imaplib
 import smtplib
 import logging
 import optparse
+import mimetypes
 import email.utils
 import ConfigParser
 import email.message
+import email.mime.text
+import email.mime.multipart
+import email.mime.application
 
 from xdg import BaseDirectory
 
@@ -200,8 +204,38 @@ class Command(object):
         if args == ('-',):
             args = (sys.stdin.read(),)
 
-        msg = email.message.Message()
-        msg.set_payload(' '.join(args))
+        if self.options.draft_attachment is None:
+            msg = email.message.Message()
+            msg.set_payload(' '.join(args))
+        else:
+            msg = email.mime.multipart.MIMEMultipart()
+
+        msg['To'] = self.options.draft_to
+        msg['Cc'] = self.options.draft_cc
+        msg['Bcc'] = self.options.draft_bcc
+        msg['Subject'] = self.options.draft_subject
+
+        if self.options.draft_attachment is not None:
+            msg.attach(email.mime.text.MIMEText(' '.join(args), 'plain'))
+
+            filename = os.path.basename(self.options.draft_attachment)
+            _, subtype = mimetypes.guess_type(self.options.draft_attachment)
+
+            with open(self.options.draft_attachment, 'rb') as f:
+                attachment = email.mime.application.MIMEApplication(
+                    f.read(),
+                    _subtype=subtype or 'plain',
+                    name=filename,
+                )
+
+            attachment.add_header(
+                'Content-Disposition',
+                'attachment',
+                filename=filename,
+            )
+
+            email.encoders.encode_base64(attachment)
+            msg.attach(attachment)
 
         self.log.debug(
             "Adding draft message to mailbox %r",
@@ -283,7 +317,12 @@ class Command(object):
             ('todo', 'email', "TODO <nobody@example.com>"),
             ('todo', 'prefix', "TODO: "),
             ('todo', 'mailbox', "INBOX"),
+            ('draft', 'to', ""),
+            ('draft', 'cc', ""),
+            ('draft', 'bcc', ""),
+            ('draft', 'subject', ""),
             ('draft', 'mailbox', "INBOX.Drafts"),
+            ('draft', 'attachment', None),
         ):
             val = from_config('get', 'todo', y) or z
 
