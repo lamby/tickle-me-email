@@ -185,7 +185,7 @@ class Command(object):
 
         response = self.imap.append(
             self.options.todo_mailbox,
-            '\SEEN',
+            r'\SEEN',
             imaplib.Time2Internaldate(time.time()),
             msg.as_string(),
         )
@@ -210,7 +210,7 @@ class Command(object):
 
         response = self.imap.append(
             self.options.draft_mailbox,
-            '\DRAFT',
+            r'\DRAFT',
             imaplib.Time2Internaldate(time.time()),
             msg.as_string(),
         )
