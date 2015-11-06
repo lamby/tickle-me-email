@@ -46,6 +46,10 @@ Examples
 
     $ DRAFT_ATTACHMENT="/path/to/attachment.txt" tickle-me-email drafts - < /path/to/body.txt
 
+* Print the all the current subject lines (eg. for scripting)::
+
+    $ tickle-me-email subjects
+
 * Print the current configuration::
 
     $ tickle-me-email config
@@ -103,3 +107,5 @@ Alternatively, you can define the following environment variables:
 * ``DRAFT_SUBJECT`` (eg. ``Draft subject``)
 * ``DRAFT_MAILBOX`` (eg. ``INBOX.Drafts``)
 * ``DRAFT_ATTACHMENT`` (eg. ``/path/to/filename.txt``)
+
+* ``SUBJECTS_MAILBOX`` (eg. ``INBOX``)

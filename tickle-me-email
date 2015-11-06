@@ -45,6 +45,7 @@ ACTIONS = (
     'rotate',
     'todo',
     'draft',
+    'subjects',
     'config',
 )
 
@@ -215,6 +216,15 @@ class Command(object):
 
         self.check_response(response, "Error adding TODO item")
 
+    def handle_subjects(self):
+        self.connect_imap()
+
+        if not self.select_mailbox(self.options.subjects_mailbox):
+            return
+
+        for x in sorted(self.get_subjects()):
+            print x
+
     def handle_draft(self, *args):
         self.connect_imap()
 
@@ -342,6 +352,7 @@ class Command(object):
             ('draft', 'subject', ""),
             ('draft', 'mailbox', "INBOX.Drafts"),
             ('draft', 'attachment', None),
+            ('subjects', 'mailbox', "INBOX"),
         ):
             val = from_config('get', 'todo', y) or z
 
