@@ -223,7 +223,7 @@ class Command(object):
             return
 
         for x in sorted(self.get_subjects()):
-            print x
+            print x.replace('\n', ' ').replace('\r', ' ')
 
     def handle_draft(self, *args):
         self.connect_imap()
