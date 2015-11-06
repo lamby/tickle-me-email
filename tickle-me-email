@@ -488,16 +488,16 @@ class Command(object):
         if not self.select_mailbox(self.options.todo_mailbox):
             return
 
-        for idx in self.get_messages('(FROM "%s")' % self.options.todo_email):
+        for val in self.get_subjects('(FROM "%s")' % self.options.todo_email):
+            # Strip prefix
+            yield val[len(self.options.todo_prefix):].strip()
+
+    def get_subjects(self, criterion='ALL'):
+        for idx in self.get_messages(criterion):
             raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
 
             # Get subject
-            val = email.message_from_string(raw)['Subject'].strip()
-
-            # Strip prefix
-            val = val[len(self.options.todo_prefix):].strip()
-
-            yield val
+            yield email.message_from_string(raw)['Subject'].strip()
 
     def parse(self, val):
         return val[1][0]
