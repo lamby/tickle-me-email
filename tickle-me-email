@@ -173,8 +173,19 @@ class Command(object):
         self.connect_imap()
 
         if not args:
-            for x in sorted(self.get_todo_list()):
+            if not self.select_mailbox(self.options.todo_mailbox):
+                return
+
+            criterion = '(FROM "%s")' % self.options.todo_email
+
+            subjects = [
+                x[len(self.options.todo_prefix):].strip()
+                for x in self.get_subjects(criterion)
+            ]
+
+            for x in sorted(subjects):
                 print " \xe2\x80\xa2 %s" % x
+
             return
 
         if args == ('-',):
@@ -483,14 +494,6 @@ class Command(object):
             raise CommandError("Could not parse UID from %r" % txt)
 
         return int(m.group('uid'))
-
-    def get_todo_list(self):
-        if not self.select_mailbox(self.options.todo_mailbox):
-            return
-
-        for val in self.get_subjects('(FROM "%s")' % self.options.todo_email):
-            # Strip prefix
-            yield val[len(self.options.todo_prefix):].strip()
 
     def get_subjects(self, criterion='ALL'):
         for idx in self.get_messages(criterion):
