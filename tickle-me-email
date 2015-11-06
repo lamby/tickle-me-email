@@ -38,7 +38,15 @@ from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
 
-ACTIONS = ('list', 'move', 'send-later', 'rotate', 'todo', 'draft', 'config')
+ACTIONS = (
+    'list',
+    'move',
+    'send-later',
+    'rotate',
+    'todo',
+    'draft',
+    'config',
+)
 
 class CommandError(Exception):
     pass
