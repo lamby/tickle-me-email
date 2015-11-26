@@ -241,13 +241,6 @@ class Command(object):
             msg.set_payload(' '.join(args))
         else:
             msg = email.mime.multipart.MIMEMultipart()
-
-        msg['To'] = self.options.draft_to
-        msg['Cc'] = self.options.draft_cc
-        msg['Bcc'] = self.options.draft_bcc
-        msg['Subject'] = self.options.draft_subject
-
-        if self.options.draft_attachment is not None:
             msg.attach(email.mime.text.MIMEText(' '.join(args), 'plain'))
 
             filename = os.path.basename(self.options.draft_attachment)
@@ -279,6 +272,11 @@ class Command(object):
             )
 
             msg.attach(attachment)
+
+        msg['To'] = self.options.draft_to
+        msg['Cc'] = self.options.draft_cc
+        msg['Bcc'] = self.options.draft_bcc
+        msg['Subject'] = self.options.draft_subject
 
         self.log.debug(
             "Adding draft message to mailbox %r",
