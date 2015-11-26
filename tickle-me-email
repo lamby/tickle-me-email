@@ -249,7 +249,7 @@ class Command(object):
 
             ctype, encoding = mimetypes.guess_type(filename)
             if ctype is None or encoding is not None:
-                # No guess could be made or the file is encoded
+                # No guess could be made *or* the file is encoded
                 ctype = 'application/octet-stream'
 
             maintype, subtype = ctype.split('/', 1)
