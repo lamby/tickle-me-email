@@ -30,9 +30,12 @@ import mimetypes
 import email.utils
 import ConfigParser
 import email.message
+import email.encoders
+import email.mime.audio
+import email.mime.base
 import email.mime.text
+import email.mime.image
 import email.mime.multipart
-import email.mime.application
 
 from xdg import BaseDirectory
 
@@ -248,14 +251,26 @@ class Command(object):
             msg.attach(email.mime.text.MIMEText(' '.join(args), 'plain'))
 
             filename = os.path.basename(self.options.draft_attachment)
-            _, subtype = mimetypes.guess_type(self.options.draft_attachment)
-
             with open(self.options.draft_attachment, 'rb') as f:
-                attachment = email.mime.application.MIMEApplication(
-                    f.read(),
-                    _subtype=subtype or 'plain',
-                    name=filename,
-                )
+                data = f.read()
+
+            ctype, encoding = mimetypes.guess_type(filename)
+            if ctype is None or encoding is not None:
+                # No guess could be made or the file is encoded
+                ctype = 'application/octet-stream'
+
+            maintype, subtype = ctype.split('/', 1)
+
+            if maintype == 'text':
+                attachment = email.mime.text.MIMEText(data, _subtype=subtype)
+            elif maintype == 'audio':
+                attachment = email.mime.audio.MIMEAudio(data, _subtype=subtype)
+            elif maintype == 'image':
+                attachment = email.mime.image.MIMEImage(data, _subtype=subtype)
+            else:
+                attachment = email.mime.base.MIMEBase(maintype, subtype)
+                attachment.set_payload(data)
+                email.encoders.encode_base64(attachment)
 
             attachment.add_header(
                 'Content-Disposition',
@@ -263,7 +278,6 @@ class Command(object):
                 filename=filename,
             )
 
-            email.encoders.encode_base64(attachment)
             msg.attach(attachment)
 
         self.log.debug(
