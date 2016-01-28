@@ -522,6 +522,9 @@ class Command(object):
         for idx in self.get_messages(criterion):
             raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
 
+            if raw == '\r\n':
+                continue
+
             # Get subject
             yield email.message_from_string(raw)['Subject'].strip()
 
