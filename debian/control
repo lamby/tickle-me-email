@@ -6,7 +6,7 @@ Build-Depends:
  debhelper (>= 9),
  dh-python,
  python,
- python-setuptols
+ python-setuptools
 Standards-Version: 3.9.6
 
 Package: tickle-me-email
