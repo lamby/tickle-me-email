@@ -1,5 +1,6 @@
 tickle-me-email (0) UNRELEASED; urgency=low
 
   * (No changelog)
+  * wrap-and-sort -sa.
 
  -- Chris Lamb <chris@chris-lamb.co.uk>  Sat, 13 Dec 2014 17:43:07 +0000
