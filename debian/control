@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Chris Lamb <chris@chris-lamb.co.uk>
 Build-Depends:
- debhelper (>= 8),
+ debhelper (>= 9),
  dh-python,
  python,
  python-setuptols
