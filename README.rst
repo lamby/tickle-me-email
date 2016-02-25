@@ -31,6 +31,18 @@ Examples
 
     $ tickle-me-email move Inbox.Mail.DELAYED.18h15 INBOX
 
+* Create ``count`` folders based on the specified Python string
+  ``template`` starting at ``start``. For example::
+
+    $ create-folders "Inbox.Mail.DELAYED.%02d" 1 14
+
+   ... will create:
+
+    * Inbox.Mail.DELAYED.01
+    * Inbox.Mail.DELAYED.02
+    * [...]
+    * Inbox.Mail.DELAYED.14
+
 * Send draft emails queued in the ``LATER.Evening``, moving them to ``Sent
   Items`` if successful. Use this to avoid getting replies "too" quickly. To be
   run at, say, 6:15pm from ``cron(8)``::

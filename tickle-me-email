@@ -46,6 +46,7 @@ ACTIONS = (
     'move',
     'send-later',
     'rotate',
+    'create-folders',
     'todo',
     'draft',
     'subjects',
@@ -138,6 +139,18 @@ class Command(object):
 
         for x in range(start, stop):
             self.handle_move(render(x + 1), render(x))
+
+    def handle_create_folders(self, template, start, count):
+        self.connect_imap()
+
+        for x in range(int(start), int(start) + int(count)):
+            try:
+                target = template % x
+            except TypeError:
+                target = template
+
+            self.log.info("Creating %s", target)
+            self.imap.create(target)
 
     def handle_send_later(self, src, target):
         self.connect_imap()
