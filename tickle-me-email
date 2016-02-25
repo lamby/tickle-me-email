@@ -83,9 +83,9 @@ class Command(object):
             parser.error("invalid action %r" % action)
 
         fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
+        spec = inspect.getargspec(fn)
 
-        if not inspect.getargspec(fn).varargs and \
-                len(inspect.getargspec(fn).args) - 1 != len(args):
+        if not spec.varargs and len(spec.args) - 1 != len(args):
             parser.error("invalid number of arguments for action %s" % action)
 
         try:
