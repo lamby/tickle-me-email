@@ -34,7 +34,7 @@ Examples
 * Create ``count`` folders based on the specified Python string
   ``template`` starting at ``start``. For example::
 
-    $ create-folders "Inbox.Mail.DELAYED.%02d" 1 14
+    $ tickle-me-email create-folders "Inbox.Mail.DELAYED.%02d" 1 14
 
    ... will create:
 
