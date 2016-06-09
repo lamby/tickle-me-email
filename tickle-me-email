@@ -299,6 +299,10 @@ class Command(object):
             if v:
                 msg[k] = v
 
+        for x in self.options.draft_extra_headers.split('\\n'):
+            k, v = x.split(': ', 1)
+            msg[k] = v
+
         self.log.debug(
             "Adding draft message to mailbox %r",
             self.options.draft_mailbox,
@@ -385,6 +389,7 @@ class Command(object):
             ('draft', 'subject', ""),
             ('draft', 'mailbox', "INBOX.Drafts"),
             ('draft', 'attachment', None),
+            ('draft', 'extra_headers', ""),
             ('subjects', 'mailbox', "INBOX"),
         ):
             val = from_config('get', 'todo', y) or z
