@@ -119,6 +119,6 @@ Alternatively, you can define the following environment variables:
 * ``DRAFT_SUBJECT`` (eg. ``Draft subject``)
 * ``DRAFT_MAILBOX`` (eg. ``INBOX.Drafts``)
 * ``DRAFT_ATTACHMENT`` (eg. ``/path/to/filename.txt``)
-* ``DRAFT_EXTRA_HEADERS`` (eg. ``X-Me-Personality: 20851409`)
+* ``DRAFT_EXTRA_HEADERS`` (eg. ``X-Me-Personality: 20851409``)
 
 * ``SUBJECTS_MAILBOX`` (eg. ``INBOX``)
