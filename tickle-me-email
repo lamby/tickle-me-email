@@ -110,6 +110,7 @@ class Command(object):
         self.connect_imap()
 
         if not self.select_mailbox(src):
+            # No messages
             return
 
         messages = self.get_messages()
@@ -156,6 +157,7 @@ class Command(object):
         self.connect_imap()
 
         if not self.select_mailbox(src):
+            # No messages
             return
 
         for idx in self.get_messages():
@@ -191,6 +193,7 @@ class Command(object):
 
         if not args:
             if not self.select_mailbox(self.options.todo_mailbox):
+                # No messages
                 return
 
             criterion = '(FROM "%s")' % self.options.todo_email
@@ -236,6 +239,7 @@ class Command(object):
         self.connect_imap()
 
         if not self.select_mailbox(self.options.subjects_mailbox):
+            # No messages
             return
 
         for x in sorted(self.get_subjects()):
