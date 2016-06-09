@@ -286,10 +286,14 @@ class Command(object):
 
             msg.attach(attachment)
 
-        msg['To'] = self.options.draft_to
-        msg['Cc'] = self.options.draft_cc
-        msg['Bcc'] = self.options.draft_bcc
-        msg['Subject'] = self.options.draft_subject
+        for k, v in (
+            ('To', self.options.draft_to),
+            ('Cc', self.options.draft_cc),
+            ('Bcc', self.options.draft_bcc),
+            ('Subject', self.options.draft_subject),
+        ):
+            if v:
+                msg[k] = v
 
         self.log.debug(
             "Adding draft message to mailbox %r",
