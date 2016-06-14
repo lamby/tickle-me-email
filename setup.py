@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='tickle-me-email',
-    version='3.5.2',
+    version='3.5.3',
     url='https://chris-lamb.co.uk/projects/tickle-me-email',
     author='Chris Lamb',
     author_email='chris@chris-lamb.co.uk',
