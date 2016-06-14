@@ -300,6 +300,8 @@ class Command(object):
                 msg[k] = v
 
         for x in self.options.draft_extra_headers.split('\\n'):
+            if not x:
+                continue
             k, v = x.split(': ', 1)
             msg[k] = v
 
