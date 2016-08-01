@@ -40,7 +40,7 @@ import email.mime.multipart
 from xdg import BaseDirectory
 
 re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
-re_imap_list = re.compile(r'^.* "[\.]" (?P<name>.*)$')
+re_imap_list = re.compile(r'^.* "[\./]" (?P<name>.*)$')
 
 ACTIONS = (
     'list',
