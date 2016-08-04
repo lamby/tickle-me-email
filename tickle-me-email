@@ -108,7 +108,7 @@ class Command(object):
             m = re_imap_list.match(x)
 
             if m is not None:
-                print m.group('name').decode('utf-7')
+                print m.group('name')
 
     def handle_move(self, src, dst):
         self.connect_imap()
