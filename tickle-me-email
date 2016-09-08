@@ -257,7 +257,7 @@ class Command(object):
         if args == ('-',):
             args = (sys.stdin.read(),)
 
-        if self.options.draft_attachment is None:
+        if not self.options.draft_attachment:
             msg = email.message.Message()
             msg.set_payload(' '.join(args))
         else:
