@@ -511,7 +511,7 @@ class Command(object):
 
         response = self.imap.select(mailbox)
 
-        self.check_response(response, "Error selecting mailbox")
+        self.check_response(response, "Error selecting mailbox %r" % mailbox)
 
         return int(self.parse(response))
 
