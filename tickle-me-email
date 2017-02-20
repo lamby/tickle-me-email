@@ -54,8 +54,10 @@ ACTIONS = (
     'config',
 )
 
+
 class CommandError(Exception):
     pass
+
 
 class Command(object):
     def __init__(self):
@@ -68,7 +70,12 @@ class Command(object):
             usage='%%prog [options] [%s]' % '|'.join(ACTIONS),
         )
 
-        parser.add_option('--verbosity', dest='verbosity', default=0, type='int')
+        parser.add_option(
+            '--verbosity',
+            dest='verbosity',
+            type='int',
+            default=0,
+        )
 
         self.options, args = parser.parse_args()
 
@@ -99,7 +106,7 @@ class Command(object):
 
         return 0
 
-    ## Actions ################################################################
+    # Actions #################################################################
 
     def handle_list(self):
         self.connect_imap()
@@ -122,7 +129,8 @@ class Command(object):
         for idx in messages:
             self.move_message(self.get_uid(idx), dst)
 
-        self.log.info("Moved %d message(s) from %s -> %s",
+        self.log.info(
+            "Moved %d message(s) from %s -> %s",
             len(messages),
             src,
             dst,
@@ -337,7 +345,7 @@ class Command(object):
         for x in ('mailbox', 'email', 'prefix'):
             print " %9s: %s" % (x, getattr(self.options, 'todo_%s' % x))
 
-    ## Setup ##################################################################
+    # Setup ###################################################################
 
     def setup_config(self, parser):
         c = ConfigParser.ConfigParser()
@@ -421,7 +429,7 @@ class Command(object):
         )
         self.log.addHandler(handler)
 
-    ## Connect ################################################################
+    # Connect #################################################################
 
     def connect_imap(self):
         if self.imap is not None:
@@ -473,7 +481,7 @@ class Command(object):
             except self.imap.error:
                 pass
 
-    ## Utilities ##############################################################
+    # Utilities ###############################################################
 
     def flag_message(self, uid, name, enable):
         self.log.debug(
@@ -568,6 +576,7 @@ class Command(object):
             return
 
         raise CommandError("%s: %s" % (msg, ' '.join(response[1])))
+
 
 if __name__ == '__main__':
     sys.exit(Command().main())
