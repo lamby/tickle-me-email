@@ -25,6 +25,7 @@ import inspect
 import imaplib
 import smtplib
 import logging
+import datetime
 import optparse
 import mimetypes
 import email.utils
@@ -50,6 +51,7 @@ ACTIONS = (
     'create-folders',
     'todo',
     'draft',
+    'sent',
     'subjects',
     'config',
 )
@@ -257,6 +259,21 @@ class Command(object):
         for x in sorted(self.get_subjects()):
             print x.replace('\n', ' ').replace('\r', ' ')
 
+    def handle_sent(self):
+        self.connect_imap()
+
+        num_today = 0
+        today = datetime.date.today().strftime("%d-%b-%Y").lstrip('0')
+        num_sent = self.select_mailbox(self.options.imap_sent_items)
+
+        for x in self.get_subjects('(ON "{}")'.format(today)):
+            print(" \xe2\x80\xa2 {}".format(
+                x.replace('\n', ' ').replace('\r', ' '),
+            ))
+            num_today += 1
+
+        print("\nI: Total sent: {} - sent today: {}".format(num_sent, num_today))
+
     def handle_draft(self, *args):
         self.connect_imap()
 
@@ -397,6 +414,7 @@ class Command(object):
             ('todo', 'email', "TODO <nobody@example.com>"),
             ('todo', 'prefix', "TODO: "),
             ('todo', 'mailbox', "INBOX"),
+            ('imap', 'sent_items', "INBOX.Sent Items"),
             ('draft', 'to', ""),
             ('draft', 'cc', ""),
             ('draft', 'bcc', ""),
