@@ -52,6 +52,7 @@ ACTIONS = (
     'todo',
     'draft',
     'sent',
+    'sent-history',
     'subjects',
     'config',
 )
@@ -273,6 +274,21 @@ class Command(object):
             num_today += 1
 
         print("\nI: Total sent: {} - sent today: {}".format(num_sent, num_today))
+
+    def handle_sent_history(self, *args):
+        self.connect_imap()
+
+        days = int(args[0]) if args else 7
+
+        self.select_mailbox(self.options.imap_sent_items)
+
+        for x in range(days):
+            dt = datetime.date.today() - datetime.timedelta(days=x)
+
+            fmt = dt.strftime("%d-%b-%Y").lstrip('0')
+            num_sent = len(self.get_messages('(ON "{}")'.format(fmt)))
+
+            print("{} {}".format(dt.strftime("%Y-%m-%d"), num_sent))
 
     def handle_draft(self, *args):
         self.connect_imap()
