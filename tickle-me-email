@@ -53,6 +53,7 @@ ACTIONS = (
     'draft',
     'sent',
     'sent-history',
+    'mbox',
     'subjects',
     'config',
 )
@@ -290,6 +291,26 @@ class Command(object):
 
             print("{} {}".format(dt.strftime("%Y-%m-%d"), num_sent))
 
+    def handle_mbox(self, *args):
+        self.connect_imap()
+
+        if args == ('-',):
+            args = (sys.stdin.read(),)
+
+        self.log.debug("Adding mbox to %r", self.options.mbox_mailbox)
+
+        content = ' '.join(args)
+        msg = email.message_from_string(content)
+
+        response = self.imap.append(
+            self.options.mbox_mailbox,
+            '',
+            time.mktime(email.utils.parsedate(msg['Date'])),
+            content,
+        )
+
+        self.check_response(response, "Error adding mbox item")
+
     def handle_draft(self, *args):
         self.connect_imap()
 
@@ -431,6 +452,7 @@ class Command(object):
             ('todo', 'prefix', "TODO: "),
             ('todo', 'mailbox', "INBOX"),
             ('imap', 'sent_items', "INBOX.Sent Items"),
+            ('mbox', 'mailbox', "INBOX"),
             ('draft', 'to', ""),
             ('draft', 'cc', ""),
             ('draft', 'bcc', ""),
