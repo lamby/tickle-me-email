@@ -119,7 +119,7 @@ class Command(object):
             m = re_imap_list.match(x)
 
             if m is not None:
-                print m.group('name')
+                print(m.group('name'))
 
     def handle_move(self, src, dst):
         self.connect_imap()
@@ -220,7 +220,7 @@ class Command(object):
             ]
 
             for x in sorted(subjects):
-                print " \xe2\x80\xa2 %s" % x
+                print(" \xe2\x80\xa2 %s" % x)
 
             return
 
@@ -259,7 +259,7 @@ class Command(object):
             return
 
         for x in sorted(self.get_subjects()):
-            print x.replace('\n', ' ').replace('\r', ' ')
+            print(x.replace('\n', ' ').replace('\r', ' '))
 
     def handle_sent(self):
         self.connect_imap()
@@ -387,17 +387,17 @@ class Command(object):
 
     def handle_config(self):
         for x in ('imap', 'smtp'):
-            print "%s\n%s\n" % (x.upper(), "=" * len(x))
+            print("%s\n%s\n" % (x.upper(), "=" * len(x)))
 
             for y in ('server', 'username', 'password', 'secure'):
-                print " %8s: %s" % (y, getattr(self.options, '%s_%s' % (x, y)))
-            print
+                print(" %8s: %s" % (y, getattr(self.options, '%s_%s' % (x, y))))
+            print()
 
-        print "TODO"
-        print "===="
+        print("TODO")
+        print("====")
         print
         for x in ('mailbox', 'email', 'prefix'):
-            print " %9s: %s" % (x, getattr(self.options, 'todo_%s' % x))
+            print(" %9s: %s" % (x, getattr(self.options, 'todo_%s' % x)))
 
     # Setup ###################################################################
 
