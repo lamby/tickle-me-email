@@ -71,14 +71,11 @@ class Command(object):
 
     def main(self):
         parser = optparse.OptionParser(
-            usage='%%prog [options] [%s]' % '|'.join(ACTIONS),
+            usage='%%prog [options] [%s]' % '|'.join(ACTIONS)
         )
 
         parser.add_option(
-            '--verbosity',
-            dest='verbosity',
-            type='int',
-            default=0,
+            '--verbosity', dest='verbosity', type='int', default=0
         )
 
         self.options, args = parser.parse_args()
@@ -134,10 +131,7 @@ class Command(object):
             self.move_message(self.get_uid(idx), dst)
 
         self.log.info(
-            "Moved %d message(s) from %s -> %s",
-            len(messages),
-            src,
-            dst,
+            "Moved %d message(s) from %s -> %s", len(messages), src, dst
         )
 
     def handle_rotate(self, template, start, stop, target):
@@ -215,7 +209,7 @@ class Command(object):
             criterion = '(FROM "%s")' % self.options.todo_email
 
             subjects = [
-                x[len(self.options.todo_prefix):].strip()
+                x[len(self.options.todo_prefix) :].strip()
                 for x in self.get_subjects(criterion)
             ]
 
@@ -238,8 +232,7 @@ class Command(object):
         msg.set_payload(subject)
 
         self.log.debug(
-            "Adding TODO message to mailbox %r",
-            self.options.todo_mailbox,
+            "Adding TODO message to mailbox %r", self.options.todo_mailbox
         )
 
         response = self.imap.append(
@@ -269,12 +262,16 @@ class Command(object):
         num_sent = self.select_mailbox(self.options.imap_sent_items)
 
         for x in self.get_subjects('(ON "{}")'.format(today)):
-            print(" \xe2\x80\xa2 {}".format(
-                x.replace('\n', ' ').replace('\r', ' '),
-            ))
+            print(
+                " \xe2\x80\xa2 {}".format(
+                    x.replace('\n', ' ').replace('\r', ' ')
+                )
+            )
             num_today += 1
 
-        print("\nI: Total sent: {} - sent today: {}".format(num_sent, num_today))
+        print(
+            "\nI: Total sent: {} - sent today: {}".format(num_sent, num_today)
+        )
 
     def handle_sent_history(self, *args):
         self.connect_imap()
@@ -349,9 +346,7 @@ class Command(object):
                 email.encoders.encode_base64(attachment)
 
             attachment.add_header(
-                'Content-Disposition',
-                'attachment',
-                filename=filename,
+                'Content-Disposition', 'attachment', filename=filename
             )
 
             msg.attach(attachment)
@@ -372,8 +367,7 @@ class Command(object):
             msg[k] = v
 
         self.log.debug(
-            "Adding draft message to mailbox %r",
-            self.options.draft_mailbox,
+            "Adding draft message to mailbox %r", self.options.draft_mailbox
         )
 
         response = self.imap.append(
@@ -404,10 +398,12 @@ class Command(object):
     def setup_config(self, parser):
         c = ConfigParser.ConfigParser()
 
-        c.read([
-            os.path.join(x, 'tickle-me-email', 'tickle-me-email.cfg')
-            for x in (BaseDirectory.xdg_config_home, '/etc')
-        ])
+        c.read(
+            [
+                os.path.join(x, 'tickle-me-email', 'tickle-me-email.cfg')
+                for x in (BaseDirectory.xdg_config_home, '/etc')
+            ]
+        )
 
         def from_config(method, x, y):
             try:
@@ -473,11 +469,11 @@ class Command(object):
 
     def setup_logging(self):
         self.log = logging.getLogger()
-        self.log.setLevel({
-            0: logging.WARNING,
-            1: logging.INFO,
-            2: logging.DEBUG,
-        }[self.options.verbosity])
+        self.log.setLevel(
+            {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[
+                self.options.verbosity
+            ]
+        )
 
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
@@ -491,8 +487,7 @@ class Command(object):
         if self.imap is not None:
             return
 
-        klass = imaplib.IMAP4_SSL if self.options.imap_secure \
-            else imaplib.IMAP4
+        klass = imaplib.IMAP4_SSL if self.options.imap_secure else imaplib.IMAP4
 
         self.log.debug(
             "Connecting to IMAP server %s using %s",
@@ -508,8 +503,7 @@ class Command(object):
         if self.smtp is not None:
             return
 
-        klass = smtplib.SMTP_SSL if self.options.smtp_secure \
-            else smtplib.SMTP
+        klass = smtplib.SMTP_SSL if self.options.smtp_secure else smtplib.SMTP
 
         self.log.debug(
             "Connecting to SMTP server %s using %s",
@@ -519,10 +513,7 @@ class Command(object):
         self.smtp = klass(self.options.smtp_server)
 
         self.log.debug("Logging into SMTP server")
-        self.smtp.login(
-            self.options.smtp_username,
-            self.options.smtp_password,
-        )
+        self.smtp.login(self.options.smtp_username, self.options.smtp_password)
 
     def disconnect(self):
         self.log.debug("Disconnecting")
@@ -547,10 +538,7 @@ class Command(object):
         )
 
         response = self.imap.uid(
-            'STORE',
-            uid,
-            '+FLAGS' if enable else '-FLAGS',
-            r'(\%s)' % name,
+            'STORE', uid, '+FLAGS' if enable else '-FLAGS', r'(\%s)' % name
         )
 
         self.check_response(response, "Error setting %s flag" % name)
@@ -559,8 +547,7 @@ class Command(object):
         self.log.debug("Copying message %s to %s", uid, target)
 
         self.check_response(
-            self.imap.uid('COPY', uid, target),
-            "Error copying message",
+            self.imap.uid('COPY', uid, target), "Error copying message"
         )
 
         self.flag_message(uid, 'Deleted', True)
@@ -592,11 +579,7 @@ class Command(object):
         return [int(x) for x in reversed(data.split())]
 
     def fetch(self, idx, parts):
-        self.log.debug(
-            "Fetching message idx %d with parts %r",
-            idx,
-            parts,
-        )
+        self.log.debug("Fetching message idx %d with parts %r", idx, parts)
 
         response = self.imap.fetch(idx, parts)
 
