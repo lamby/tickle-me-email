@@ -618,4 +618,7 @@ class Command(object):
 
 
 if __name__ == '__main__':
-    sys.exit(Command().main())
+    try:
+        sys.exit(Command().main())
+    except KeyboardInterrupt:
+        sys.exit(2)
