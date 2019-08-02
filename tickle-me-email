@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # tickle-me-email
-# Copyright (C) 2014, 2015, 2016, 2017, 2018 Chris Lamb <chris@chris-lamb.co.uk>
+# Copyright (C) 2014, 2015, 2016, 2017, 2018, 2019 Chris Lamb <chris@chris-lamb.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,11 +25,11 @@ import inspect
 import imaplib
 import smtplib
 import logging
+import argparse
 import datetime
-import optparse
 import mimetypes
 import email.utils
-import ConfigParser
+import configparser
 import email.message
 import email.encoders
 import email.mime.audio
@@ -40,22 +40,22 @@ import email.mime.multipart
 
 from xdg import BaseDirectory
 
-re_uid = re.compile(r'\d+ \(UID (?P<uid>\d+)\)')
+re_uid = re.compile(r"\d+ \(UID (?P<uid>\d+)\)")
 re_imap_list = re.compile(r'^.* "[\./]" (?P<name>.*)$')
 
 ACTIONS = (
-    'list',
-    'move',
-    'send-later',
-    'rotate',
-    'create-folders',
-    'todo',
-    'draft',
-    'sent',
-    'sent-history',
-    'mbox',
-    'subjects',
-    'config',
+    "list",
+    "move",
+    "send-later",
+    "rotate",
+    "create-folders",
+    "todo",
+    "draft",
+    "sent",
+    "sent-history",
+    "mbox",
+    "subjects",
+    "config",
 )
 
 
@@ -63,46 +63,47 @@ class CommandError(Exception):
     pass
 
 
-class Command(object):
+class Options:
+    pass
+
+
+class Command:
     def __init__(self):
         self.log = None
         self.imap = None
         self.smtp = None
+        self.options = Options()
 
     def main(self):
-        parser = optparse.OptionParser(
-            usage='%%prog [options] [%s]' % '|'.join(ACTIONS)
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "--verbosity", dest="verbosity", type=int, default=0
         )
+        parser.add_argument("action", help="action", choices=ACTIONS)
+        parser.add_argument("arg", nargs="*")
 
-        parser.add_option(
-            '--verbosity', dest='verbosity', type='int', default=0
-        )
+        self.options = parser.parse_args()
 
-        self.options, args = parser.parse_args()
+        args = self.options.arg
 
         self.setup_config(parser)
         self.setup_logging()
 
-        if not args:
-            parser.error("must specify an action")
+        action = self.options.action
 
-        # Strip off action
-        action, args = args[0], args[1:]
-
-        if action not in ACTIONS:
-            parser.error("invalid action %r" % action)
-
-        fn = getattr(self, 'handle_%s' % action.replace('-', '_'))
-        spec = inspect.getargspec(fn)
+        fn = getattr(self, "handle_{}".format(action.replace("-", "_")))
+        spec = inspect.getfullargspec(fn)
 
         if not spec.varargs and len(spec.args) - 1 != len(args):
-            parser.error("invalid number of arguments for action %s" % action)
+            parser.error(
+                "invalid number of arguments for action {}".format(action)
+            )
 
         try:
             fn(*args)
             self.disconnect()
         except CommandError as exc:
-            self.log.error(exc.message)
+            self.log.error(exc)
             return 1
 
         return 0
@@ -113,10 +114,13 @@ class Command(object):
         self.connect_imap()
 
         for x in self.imap.list()[1]:
-            m = re_imap_list.match(x)
+            m = re_imap_list.match(x.decode("utf-8"))
 
             if m is not None:
-                print(m.group('name'))
+                val = m.group("name")
+                if val.startswith('"') and val.endswith('"'):
+                    val = val[1:-1]
+                print(val)
 
     def handle_move(self, src, dst):
         self.connect_imap()
@@ -174,27 +178,27 @@ class Command(object):
             self.connect_smtp()
 
             uid = self.get_uid(idx)
-            msg = email.message_from_string(self.fetch(idx, '(RFC822)')[1])
+            msg = email.message_from_string(self.fetch(idx, "(RFC822)")[1])
 
             # Don't reveal the original date
-            del msg['date']
+            del msg["date"]
 
             recipients = set(
                 y
-                for x in ('to', 'cc', 'bcc')
+                for x in ("to", "cc", "bcc")
                 for _, y in email.utils.getaddresses(msg.get_all(x, []))
             )
 
             self.log.info(
                 "Sending message %r to %s",
-                msg['subject'],
-                ', '.join(recipients),
+                msg["subject"],
+                ", ".join(recipients),
             )
 
-            self.smtp.sendmail(msg['from'], recipients, msg.as_string())
+            self.smtp.sendmail(msg["from"], recipients, msg.as_string())
 
             # Remove draft flag
-            self.flag_message(uid, 'Draft', False)
+            self.flag_message(uid, "Draft", False)
 
             self.move_message(uid, target)
 
@@ -206,7 +210,7 @@ class Command(object):
                 # No messages
                 return
 
-            criterion = '(FROM "%s")' % self.options.todo_email
+            criterion = "(FROM {})".format(self.quote(self.options.todo_email))
 
             subjects = [
                 x[len(self.options.todo_prefix) :].strip()
@@ -214,21 +218,21 @@ class Command(object):
             ]
 
             for x in sorted(subjects):
-                print(" \xe2\x80\xa2 %s" % x)
+                print(" \xe2\x80\xa2 {}".format(x))
 
             return
 
-        if args == ('-',):
+        if args == ("-",):
             args = (sys.stdin.read(),)
 
         self.log.debug("Creating TODO message")
 
-        subject = "%s%s" % (self.options.todo_prefix, ' '.join(args))
+        subject = "{}{}".format(self.options.todo_prefix, " ".join(args))
 
         msg = email.message.Message()
-        msg['To'] = self.options.todo_email
-        msg['From'] = self.options.todo_email
-        msg['Subject'] = subject
+        msg["To"] = self.options.todo_email
+        msg["From"] = self.options.todo_email
+        msg["Subject"] = subject
         msg.set_payload(subject)
 
         self.log.debug(
@@ -236,10 +240,10 @@ class Command(object):
         )
 
         response = self.imap.append(
-            self.options.todo_mailbox,
-            r'\SEEN',
+            self.quote(self.options.todo_mailbox),
+            r"\SEEN",
             imaplib.Time2Internaldate(time.time()),
-            msg.as_string(),
+            msg.as_string().encode("utf-8"),
         )
 
         self.check_response(response, "Error adding TODO item")
@@ -252,19 +256,19 @@ class Command(object):
             return
 
         for x in sorted(self.get_subjects()):
-            print(x.replace('\n', ' ').replace('\r', ' '))
+            print(x.replace("\n", " ").replace("\r", " "))
 
     def handle_sent(self):
         self.connect_imap()
 
         num_today = 0
-        today = datetime.date.today().strftime("%d-%b-%Y").lstrip('0')
+        today = datetime.date.today().strftime("%d-%b-%Y").lstrip("0")
         num_sent = self.select_mailbox(self.options.imap_sent_items)
 
-        for x in self.get_subjects('(ON "{}")'.format(today)):
+        for x in self.get_subjects("(ON {})".format(self.quote(today))):
             print(
                 " \xe2\x80\xa2 {}".format(
-                    x.replace('\n', ' ').replace('\r', ' ')
+                    x.replace("\n", " ").replace("\r", " ")
                 )
             )
             num_today += 1
@@ -283,26 +287,28 @@ class Command(object):
         for x in range(days):
             dt = datetime.date.today() - datetime.timedelta(days=x)
 
-            fmt = dt.strftime("%d-%b-%Y").lstrip('0')
-            num_sent = len(self.get_messages('(ON "{}")'.format(fmt)))
+            fmt = dt.strftime("%d-%b-%Y").lstrip("0")
+            num_sent = len(
+                self.get_messages("(ON {})".format(self.quote(fmt)))
+            )
 
             print("{} {}".format(dt.strftime("%Y-%m-%d"), num_sent))
 
     def handle_mbox(self, *args):
         self.connect_imap()
 
-        if args == ('-',):
+        if args == ("-",):
             args = (sys.stdin.read(),)
 
         self.log.debug("Adding mbox to %r", self.options.mbox_mailbox)
 
-        content = ' '.join(args)
+        content = " ".join(args)
         msg = email.message_from_string(content)
 
         response = self.imap.append(
             self.options.mbox_mailbox,
-            '',
-            time.mktime(email.utils.parsedate(msg['Date'])),
+            "",
+            time.mktime(email.utils.parsedate(msg["Date"])),
             content,
         )
 
@@ -313,32 +319,32 @@ class Command(object):
 
         self.log.debug("Creating draft message")
 
-        if args == ('-',):
+        if args == ("-",):
             args = (sys.stdin.read(),)
 
         if not self.options.draft_attachment:
             msg = email.message.Message()
-            msg.set_payload(' '.join(args))
+            msg.set_payload(" ".join(args))
         else:
             msg = email.mime.multipart.MIMEMultipart()
-            msg.attach(email.mime.text.MIMEText(' '.join(args), 'plain'))
+            msg.attach(email.mime.text.MIMEText(" ".join(args), "plain"))
 
             filename = os.path.basename(self.options.draft_attachment)
-            with open(self.options.draft_attachment, 'rb') as f:
+            with open(self.options.draft_attachment, "rb") as f:
                 data = f.read()
 
             ctype, encoding = mimetypes.guess_type(filename)
             if ctype is None or encoding is not None:
                 # No guess could be made *or* the file is encoded
-                ctype = 'application/octet-stream'
+                ctype = "application/octet-stream"
 
-            maintype, subtype = ctype.split('/', 1)
+            maintype, subtype = ctype.split("/", 1)
 
-            if maintype == 'text':
+            if maintype == "text":
                 attachment = email.mime.text.MIMEText(data, _subtype=subtype)
-            elif maintype == 'audio':
+            elif maintype == "audio":
                 attachment = email.mime.audio.MIMEAudio(data, _subtype=subtype)
-            elif maintype == 'image':
+            elif maintype == "image":
                 attachment = email.mime.image.MIMEImage(data, _subtype=subtype)
             else:
                 attachment = email.mime.base.MIMEBase(maintype, subtype)
@@ -346,24 +352,24 @@ class Command(object):
                 email.encoders.encode_base64(attachment)
 
             attachment.add_header(
-                'Content-Disposition', 'attachment', filename=filename
+                "Content-Disposition", "attachment", filename=filename
             )
 
             msg.attach(attachment)
 
         for k, v in (
-            ('To', self.options.draft_to),
-            ('Cc', self.options.draft_cc),
-            ('Bcc', self.options.draft_bcc),
-            ('Subject', self.options.draft_subject),
+            ("To", self.options.draft_to),
+            ("Cc", self.options.draft_cc),
+            ("Bcc", self.options.draft_bcc),
+            ("Subject", self.options.draft_subject),
         ):
             if v:
                 msg[k] = v
 
-        for x in self.options.draft_extra_headers.split('\\n'):
+        for x in self.options.draft_extra_headers.split("\\n"):
             if not x:
                 continue
-            k, v = x.split(': ', 1)
+            k, v = x.split(": ", 1)
             msg[k] = v
 
         self.log.debug(
@@ -372,7 +378,7 @@ class Command(object):
 
         response = self.imap.append(
             self.options.draft_mailbox,
-            r'\DRAFT',
+            r"\DRAFT",
             imaplib.Time2Internaldate(time.time()),
             msg.as_string(),
         )
@@ -380,92 +386,102 @@ class Command(object):
         self.check_response(response, "Error adding draft item")
 
     def handle_config(self):
-        for x in ('imap', 'smtp'):
-            print("%s\n%s\n" % (x.upper(), "=" * len(x)))
+        for x in ("imap", "smtp"):
+            print("{}\n{}\n".format(x.upper(), "=" * len(x)))
 
-            for y in ('server', 'username', 'password', 'secure'):
-                print(" %8s: %s" % (y, getattr(self.options, '%s_%s' % (x, y))))
+            for y in ("server", "username", "password", "secure"):
+                print(
+                    "{:>9}: {!r}".format(
+                        y, getattr(self.options, "{}_{}".format(x, y))
+                    )
+                )
             print()
 
         print("TODO")
         print("====")
-        print
-        for x in ('mailbox', 'email', 'prefix'):
-            print(" %9s: %s" % (x, getattr(self.options, 'todo_%s' % x)))
+        print()
+        for x in ("mailbox", "email", "prefix"):
+            print(
+                "{:>9}: {!r}".format(
+                    x, getattr(self.options, "todo_{}".format(x))
+                )
+            )
 
     # Setup ###################################################################
 
     def setup_config(self, parser):
-        c = ConfigParser.ConfigParser()
+        c = configparser.ConfigParser()
 
         c.read(
             [
-                os.path.join(x, 'tickle-me-email', 'tickle-me-email.cfg')
-                for x in (BaseDirectory.xdg_config_home, '/etc')
+                os.path.join(x, "tickle-me-email", "tickle-me-email.cfg")
+                for x in (BaseDirectory.xdg_config_home, "/etc")
             ]
         )
 
-        def from_config(method, x, y):
+        def from_config(method, section, option):
             try:
-                return getattr(c, method)(x, y)
-            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+                return getattr(c, method)(section, option)
+            except (configparser.NoSectionError, configparser.NoOptionError):
                 return None
 
-        for x in ('imap', 'smtp'):
-            for y in ('server', 'username', 'password'):
+        for x in ("imap", "smtp"):
+            for y in ("server", "username", "password"):
                 val = None
 
                 # Try config file
-                val = from_config('get', x, y)
+                val = from_config("get", x, y)
 
                 # Allow os.environ to override
                 try:
-                    val = os.environ['%s_%s' % (x.upper(), y.upper())]
+                    val = os.environ["{}_{}".format(x.upper(), y.upper())]
                 except KeyError:
                     pass
 
                 if val is None:
                     parser.error(
-                        "missing %r config option for %s" % (y, x.upper())
+                        "missing {!r} config option for {}".format(
+                            y, x.upper()
+                        )
                     )
 
-                setattr(self.options, '%s_%s' % (x, y), val)
+                setattr(self.options, "{}_{}".format(x, y), val)
 
             # Check secure flag, allowing environment to override
-            val = from_config('getboolean', x, 'secure') or False
+            val = from_config("getboolean", x, "secure") or False
 
             try:
-                k = os.environ['%s_SECURE' % x.upper()].lower()
+                k = os.environ["{}_SECURE".format(x.upper())].lower()
 
-                val = {'true': True, 'false': False}[k]
+                val = {"true": True, "false": False}[k]
             except KeyError:
                 pass
 
-            setattr(self.options, '%s_secure' % x, val)
+            setattr(self.options, "{}_secure".format(x), val)
 
         for x, y, z in (
-            ('todo', 'email', "TODO <nobody@example.com>"),
-            ('todo', 'prefix', "TODO: "),
-            ('todo', 'mailbox', "INBOX"),
-            ('imap', 'sent_items', "INBOX.Sent Items"),
-            ('mbox', 'mailbox', "INBOX"),
-            ('draft', 'to', ""),
-            ('draft', 'cc', ""),
-            ('draft', 'bcc', ""),
-            ('draft', 'subject', ""),
-            ('draft', 'mailbox', "INBOX.Drafts"),
-            ('draft', 'attachment', None),
-            ('draft', 'extra_headers', ""),
-            ('subjects', 'mailbox', "INBOX"),
+            ("todo", "email", "TODO <nobody@example.com>"),
+            ("todo", "prefix", "TODO: "),
+            ("todo", "mailbox", "INBOX"),
+            ("imap", "sent_items", "INBOX.Sent Items"),
+            ("mbox", "mailbox", "INBOX"),
+            ("draft", "to", ""),
+            ("draft", "cc", ""),
+            ("draft", "bcc", ""),
+            ("draft", "subject", ""),
+            ("draft", "mailbox", "INBOX.Drafts"),
+            ("draft", "attachment", None),
+            ("draft", "extra_headers", ""),
+            ("subjects", "mailbox", "INBOX"),
         ):
-            val = from_config('get', x, y) or z
+            val = from_config("get", x, y) or z
 
             try:
-                val = os.environ['%s_%s' % (x.upper(), y.upper())]
+                val = os.environ["{}_{}".format(x.upper(), y.upper())]
             except KeyError:
                 pass
 
-            setattr(self.options, '%s_%s' % (x, y), val)
+            setattr(self.options, "{}_{}".format(x, y), val)
 
     def setup_logging(self):
         self.log = logging.getLogger()
@@ -477,7 +493,7 @@ class Command(object):
 
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
-            logging.Formatter('%(asctime).19s %(levelname).1s %(message)s')
+            logging.Formatter("%(asctime).19s %(levelname).1s %(message)s")
         )
         self.log.addHandler(handler)
 
@@ -487,7 +503,9 @@ class Command(object):
         if self.imap is not None:
             return
 
-        klass = imaplib.IMAP4_SSL if self.options.imap_secure else imaplib.IMAP4
+        klass = (
+            imaplib.IMAP4_SSL if self.options.imap_secure else imaplib.IMAP4
+        )
 
         self.log.debug(
             "Connecting to IMAP server %s using %s",
@@ -532,25 +550,30 @@ class Command(object):
 
     def flag_message(self, uid, name, enable):
         self.log.debug(
-            "%s flag %%r on UID %%s" % ("Setting" if enable else "Unsetting"),
+            "%s flag %r on UID %s",
+            "Setting" if enable else "Unsetting",
             name,
             uid,
         )
 
         response = self.imap.uid(
-            'STORE', uid, '+FLAGS' if enable else '-FLAGS', r'(\%s)' % name
+            "STORE",
+            str(uid),
+            "+FLAGS" if enable else "-FLAGS",
+            r"(\{})".format(name),
         )
 
-        self.check_response(response, "Error setting %s flag" % name)
+        self.check_response(response, "Error setting {} flag".format(name))
 
     def move_message(self, uid, target):
-        self.log.debug("Copying message %s to %s", uid, target)
+        self.log.debug("Copying message %s to %r", uid, target)
 
         self.check_response(
-            self.imap.uid('COPY', uid, target), "Error copying message"
+            self.imap.uid("COPY", str(uid), self.quote(target)),
+            "Error copying message",
         )
 
-        self.flag_message(uid, 'Deleted', True)
+        self.flag_message(uid, "Deleted", True)
         self.imap.expunge()
 
     def select_mailbox(self, mailbox):
@@ -560,13 +583,15 @@ class Command(object):
 
         self.log.debug("Selecting mailbox %r", mailbox)
 
-        response = self.imap.select(mailbox)
+        response = self.imap.select(self.quote(mailbox))
 
-        self.check_response(response, "Error selecting mailbox %r" % mailbox)
+        self.check_response(
+            response, "Error selecting mailbox {!r}".format(mailbox)
+        )
 
         return int(self.parse(response))
 
-    def get_messages(self, criterion='ALL'):
+    def get_messages(self, criterion="ALL"):
         self.log.debug("Searching for messages matching %r", criterion)
 
         response = self.imap.search(None, criterion)
@@ -580,44 +605,48 @@ class Command(object):
 
     def fetch(self, idx, parts):
         self.log.debug("Fetching message idx %d with parts %r", idx, parts)
-
-        response = self.imap.fetch(idx, parts)
+        response = self.imap.fetch(str(idx), parts)
 
         self.check_response(response, "Error fetching messages")
 
         return self.parse(response)
 
     def get_uid(self, idx):
-        txt = self.fetch(idx, '(UID)')
+        txt = self.fetch(idx, "(UID)")
 
-        m = re_uid.match(txt)
+        m = re_uid.match(txt.decode("utf-8"))
 
         if m is None:
-            raise CommandError("Could not parse UID from %r" % txt)
+            raise CommandError("Could not parse UID from {!r}".format(txt))
 
-        return int(m.group('uid'))
+        return int(m.group("uid"))
 
-    def get_subjects(self, criterion='ALL'):
+    def get_subjects(self, criterion="ALL"):
         for idx in self.get_messages(criterion):
-            raw = self.fetch(idx, '(BODY.PEEK[HEADER.FIELDS (Subject)])')[1]
+            raw = self.fetch(idx, "(BODY.PEEK[HEADER.FIELDS (Subject)])")[1]
 
-            if raw == '\r\n':
+            if raw == "\r\n":
                 continue
 
             # Get subject
-            yield email.message_from_string(raw)['Subject'].strip()
+            yield email.message_from_string(raw)["Subject"].strip()
 
     def parse(self, val):
         return val[1][0]
 
     def check_response(self, response, msg):
-        if response[0] == 'OK':
+        if response[0] == "OK":
             return
 
-        raise CommandError("%s: %s" % (msg, ' '.join(response[1])))
+        suffix = " ".join(x.decode("utf-8") for x in response[1])
+
+        raise CommandError("{}: {}".format(msg, suffix))
+
+    def quote(self, val):
+        return '"{}"'.format(val.replace("\\", "\\\\").replace('"', '\\"'))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         sys.exit(Command().main())
     except KeyboardInterrupt:
