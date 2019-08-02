@@ -380,7 +380,7 @@ class Command:
             self.options.draft_mailbox,
             r"\DRAFT",
             imaplib.Time2Internaldate(time.time()),
-            msg.as_string(),
+            msg.as_string().encode('utf-8'),
         )
 
         self.check_response(response, "Error adding draft item")
