@@ -309,7 +309,7 @@ class Command:
             self.options.mbox_mailbox,
             "",
             time.mktime(email.utils.parsedate(msg["Date"])),
-            content,
+            content.encode('utf-8'),
         )
 
         self.check_response(response, "Error adding mbox item")
@@ -377,7 +377,7 @@ class Command:
         )
 
         response = self.imap.append(
-            self.options.draft_mailbox,
+            self.quote(self.options.draft_mailbox),
             r"\DRAFT",
             imaplib.Time2Internaldate(time.time()),
             msg.as_string().encode('utf-8'),
