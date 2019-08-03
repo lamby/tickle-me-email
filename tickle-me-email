@@ -623,7 +623,7 @@ class Command:
 
     def get_subjects(self, criterion="ALL"):
         for idx in self.get_messages(criterion):
-            raw = self.fetch(idx, "(BODY.PEEK[HEADER.FIELDS (Subject)])")[1]
+            raw = self.fetch(idx, "(BODY.PEEK[HEADER.FIELDS (Subject)])")[1].decode("utf-8")
 
             if raw == "\r\n":
                 continue
