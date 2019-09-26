@@ -186,19 +186,7 @@ class Command:
             # Don't reveal the original date
             del msg["date"]
 
-            recipients = set(
-                y
-                for x in ("to", "cc", "bcc")
-                for _, y in email.utils.getaddresses(msg.get_all(x, []))
-            )
-
-            self.log.info(
-                "Sending message %r to %s",
-                msg["subject"],
-                ", ".join(recipients),
-            )
-
-            self.smtp.sendmail(msg["from"], recipients, msg.as_string())
+            self.sendmail(msg)
 
             # Remove draft flag
             self.flag_message(uid, "Draft", False)
@@ -650,6 +638,27 @@ class Command:
 
     def quote(self, val):
         return '"{}"'.format(val.replace("\\", "\\\\").replace('"', '\\"'))
+
+    def sendmail(self, msg):
+        # Set some defaults
+        for k, v in {
+            'from': '',
+            'date': email.utils.format_datetime(datetime.datetime.utcnow()),
+            'subject': '',
+        }.items():
+            msg[k] = msg[k] or v
+
+        recipients = set(
+            y
+            for x in ("to", "cc", "bcc")
+            for _, y in email.utils.getaddresses(msg.get_all(x, []))
+        )
+
+        self.log.info(
+            "Sending message %r to %s", msg["subject"], ", ".join(recipients)
+        )
+
+        self.smtp.sendmail(msg["from"], recipients, msg.as_string())
 
 
 if __name__ == "__main__":
