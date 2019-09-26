@@ -218,7 +218,7 @@ class Command:
             # Remove draft flag
             self.flag_message(uid, "Draft", False)
 
-            self.move_message(uid, target)
+            self.move_message(uid, self.options.imap_sent_items)
 
     def handle_todo(self, *args):
         self.connect_imap()

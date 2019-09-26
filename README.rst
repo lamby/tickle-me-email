@@ -43,11 +43,11 @@ Examples
     * [...]
     * Inbox.Mail.DELAYED.14
 
-* Send draft emails queued in the ``LATER.Evening``, moving them to ``Sent
+* Send draft emails queued in the ``LATER.Evening``, moving them to a ``Sent
   Items`` if successful. Use this to avoid getting replies "too" quickly. To be
   run at, say, 6:15pm from ``cron(8)``::
 
-    $ tickle-me-email send-later INBOX.Mail.LATER.Evening "INBOX.Sent Items"
+    $ tickle-me-email send-later INBOX.Mail.LATER.Evening
 
 * List all email mailboxes. Use this to find out the "internal" names of your
   IMAP folders::
