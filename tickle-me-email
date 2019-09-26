@@ -94,7 +94,10 @@ class Command:
         fn = getattr(self, "handle_{}".format(action.replace("-", "_")))
         spec = inspect.getfullargspec(fn)
 
-        if not spec.varargs and len(spec.args) - 1 != len(args):
+        num_required = (
+            len(spec.args) - len(spec.defaults or ()) - 1
+        )  # ignore "self"
+        if not spec.varargs and num_required < len(args):
             parser.error(
                 "invalid number of arguments for action {}".format(action)
             )
