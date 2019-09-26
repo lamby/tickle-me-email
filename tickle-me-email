@@ -208,7 +208,9 @@ class Command:
             self.connect_smtp()
 
             uid = self.get_uid(idx)
-            msg = email.message_from_string(self.fetch(idx, "(RFC822)")[1])
+            msg = email.message_from_string(
+                self.fetch(idx, "(RFC822)")[1].decode("utf-8")
+            )
 
             # Don't reveal the original date
             del msg["date"]
