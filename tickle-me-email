@@ -563,6 +563,9 @@ class Command:
             "Error copying message",
         )
 
+        self.delete_message(uid)
+
+    def delete_message(self, uid):
         self.flag_message(uid, "Deleted", True)
         self.imap.expunge()
 
