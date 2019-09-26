@@ -46,6 +46,7 @@ re_imap_list = re.compile(r'^.* "[\./]" (?P<name>.*)$')
 ACTIONS = (
     "list",
     "move",
+    "sendmail",
     "send-later",
     "rotate",
     "create-folders",
@@ -170,7 +171,33 @@ class Command:
             self.log.info("Creating %s", target)
             self.imap.create(target)
 
-    def handle_send_later(self, src, target):
+    def handle_sendmail(self, filename='-'):
+        if filename is None or filename == '-':
+            self.log.debug("Sending message from stdin")
+            raw = sys.stdin.read()
+        else:
+            self.log.debug("Sending message from %s", filename)
+            with open(filename) as f:
+                raw = f.read()
+
+        msg = email.message_from_string(raw)
+
+        if self.options.sendmail_attachment:
+            msg = self.add_attachment(msg, self.options.sendmail_attachment)
+
+        self.connect_smtp()
+        self.sendmail(msg)
+
+        self.connect_imap()
+        response = self.imap.append(
+            self.quote(self.options.imap_sent_items),
+            r"\SEEN",
+            imaplib.Time2Internaldate(time.time()),
+            msg.as_string().encode("utf-8"),
+        )
+        self.check_response(response, "Error adding message to sent items")
+
+    def handle_send_later(self, src):
         self.connect_imap()
 
         if not self.select_mailbox(src):
@@ -434,6 +461,7 @@ class Command:
             ("draft", "mailbox", "INBOX.Drafts"),
             ("draft", "attachment", None),
             ("draft", "extra_headers", ""),
+            ("sendmail", "attachment", None),
             ("subjects", "mailbox", "INBOX"),
         ):
             val = from_config("get", x, y) or z
@@ -612,11 +640,12 @@ class Command:
     def sendmail(self, msg):
         # Set some defaults
         for k, v in {
-            'from': '',
-            'date': email.utils.format_datetime(datetime.datetime.utcnow()),
-            'subject': '',
+            'From': '',
+            'Date': email.utils.format_datetime(datetime.datetime.utcnow()),
+            'Subject': '',
         }.items():
-            msg[k] = msg[k] or v
+            if not msg[k]:
+                msg[k] = v
 
         recipients = set(
             y
