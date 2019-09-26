@@ -310,44 +310,7 @@ class Command:
 
         self.log.debug("Creating draft message")
 
-        if args == ("-",):
-            args = (sys.stdin.read(),)
-
-        if not self.options.draft_attachment:
-            msg = email.message.Message()
-            msg.set_payload(" ".join(args))
-        else:
-            msg = email.mime.multipart.MIMEMultipart()
-            msg.attach(email.mime.text.MIMEText(" ".join(args), "plain"))
-
-            filename = os.path.basename(self.options.draft_attachment)
-            with open(self.options.draft_attachment, "rb") as f:
-                data = f.read()
-
-            ctype, encoding = mimetypes.guess_type(filename)
-            if ctype is None or encoding is not None:
-                # No guess could be made *or* the file is encoded
-                ctype = "application/octet-stream"
-
-            maintype, subtype = ctype.split("/", 1)
-
-            if maintype == "text":
-                data = data.decode('utf-8')
-                attachment = email.mime.text.MIMEText(data, _subtype=subtype)
-            elif maintype == "audio":
-                attachment = email.mime.audio.MIMEAudio(data, _subtype=subtype)
-            elif maintype == "image":
-                attachment = email.mime.image.MIMEImage(data, _subtype=subtype)
-            else:
-                attachment = email.mime.base.MIMEBase(maintype, subtype)
-                attachment.set_payload(data)
-                email.encoders.encode_base64(attachment)
-
-            attachment.add_header(
-                "Content-Disposition", "attachment", filename=filename
-            )
-
-            msg.attach(attachment)
+        msg = email.message.Message()
 
         for k, v in (
             ("To", self.options.draft_to),
@@ -357,6 +320,13 @@ class Command:
         ):
             if v:
                 msg[k] = v
+
+        if args == ("-",):
+            args = (sys.stdin.read(),)
+        msg.set_payload(" ".join(args))
+
+        if self.options.draft_attachment:
+            msg = self.add_attachment(msg, self.options.draft_attachment)
 
         for x in self.options.draft_extra_headers.split("\\n"):
             if not x:
@@ -659,6 +629,50 @@ class Command:
         )
 
         self.smtp.sendmail(msg["from"], recipients, msg.as_string())
+
+    def add_attachment(self, msg, filename):
+        if not msg.is_multipart():
+            old_msg = msg
+
+            msg = email.mime.multipart.MIMEMultipart()
+
+            for k, v in old_msg.items():
+                msg[k] = v
+
+            msg.attach(
+                email.mime.text.MIMEText(old_msg.get_payload(), "plain")
+            )
+
+        basename = os.path.basename(filename)
+        with open(filename, "rb") as f:
+            data = f.read()
+
+        ctype, encoding = mimetypes.guess_type(basename)
+        if ctype is None or encoding is not None:
+            # No guess could be made *or* the file is encoded
+            ctype = "application/octet-stream"
+
+        maintype, subtype = ctype.split("/", 1)
+
+        if maintype == "text":
+            data = data.decode('utf-8')
+            attachment = email.mime.text.MIMEText(data, _subtype=subtype)
+        elif maintype == "audio":
+            attachment = email.mime.audio.MIMEAudio(data, _subtype=subtype)
+        elif maintype == "image":
+            attachment = email.mime.image.MIMEImage(data, _subtype=subtype)
+        else:
+            attachment = email.mime.base.MIMEBase(maintype, subtype)
+            attachment.set_payload(data)
+            email.encoders.encode_base64(attachment)
+
+        attachment.add_header(
+            "Content-Disposition", "attachment", filename=filename
+        )
+
+        msg.attach(attachment)
+
+        return msg
 
 
 if __name__ == "__main__":
