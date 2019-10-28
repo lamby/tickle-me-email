@@ -699,7 +699,7 @@ class Command:
             email.encoders.encode_base64(attachment)
 
         attachment.add_header(
-            "Content-Disposition", "attachment", filename=filename
+            "Content-Disposition", "attachment", filename=basename
         )
 
         msg.attach(attachment)
