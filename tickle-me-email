@@ -647,7 +647,7 @@ class Command:
             'Date': email.utils.format_datetime(datetime.datetime.utcnow()),
             'Subject': '',
         }.items():
-            if not msg[k]:
+            if k not in msg:
                 msg[k] = v
 
         recipients = set(
