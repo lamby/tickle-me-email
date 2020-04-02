@@ -30,6 +30,7 @@ import datetime
 import mimetypes
 import email.utils
 import configparser
+import email.header
 import email.message
 import email.encoders
 import email.mime.audio
@@ -237,7 +238,7 @@ class Command:
 
             subjects = [
                 x[len(self.options.todo_prefix) :].strip()
-                for x in self.get_subjects(criterion)
+                for x in self.get_field("Subject", criterion)
             ]
 
             for x in sorted(subjects):
@@ -278,7 +279,7 @@ class Command:
             # No messages
             return
 
-        for x in sorted(self.get_subjects()):
+        for x in sorted(self.get_field("Subject")):
             print(x.replace("\n", " ").replace("\r", " "))
 
     def handle_sent(self):
@@ -288,7 +289,7 @@ class Command:
         today = datetime.date.today().strftime("%d-%b-%Y").lstrip("0")
         num_sent = self.select_mailbox(self.options.imap_sent_items)
 
-        for x in self.get_subjects("(ON {})".format(self.quote(today))):
+        for x in self.get_field("Subject", "(ON {})".format(self.quote(today))):
             print(
                 " \xe2\x80\xa2 {}".format(
                     x.replace("\n", " ").replace("\r", " ")
@@ -619,17 +620,21 @@ class Command:
 
         return int(m.group("uid"))
 
-    def get_subjects(self, criterion="ALL"):
+    def get_field(self, field, criterion="ALL"):
         for idx in self.get_messages(criterion):
-            raw = self.fetch(idx, "(BODY.PEEK[HEADER.FIELDS (Subject)])")[
+            raw = self.fetch(idx, "(BODY.PEEK[HEADER.FIELDS ({})])".format(self.quote(field)))[
                 1
             ].decode("utf-8")
 
             if raw == "\r\n":
                 continue
 
-            # Get subject
-            yield email.message_from_string(raw)["Subject"].strip()
+            val = email.message_from_string(raw)[field]
+
+            # https://stackoverflow.com/questions/7331351/python-email-header-decoding-utf-8
+            val = str(email.header.make_header(email.header.decode_header(val)))
+
+            yield val
 
     def parse(self, val):
         return val[1][0]
