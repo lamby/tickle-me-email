@@ -199,18 +199,19 @@ class Command:
         self.check_response(response, "Error adding message to sent items")
 
     def handle_send_later(self, src, *args):
-        count = int(args[0]) if args else sys.maxsize
+        count = max(0, int(args[0]) if args else sys.maxsize)
 
         self.connect_imap()
         if not self.select_mailbox(src):
             # No messages
             return
 
-        for idx in self.get_messages():
-            count -= 1
-            if count < 0:
-                break
+        to_send = self.get_messages()
 
+        # Limit number of messages
+        to_send = to_send[:count]
+
+        for idx in to_send:
             self.connect_smtp()
 
             uid = self.get_uid(idx)
