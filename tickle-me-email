@@ -21,7 +21,6 @@ import os
 import sys
 import time
 import email
-import random
 import inspect
 import imaplib
 import smtplib
@@ -207,11 +206,8 @@ class Command:
             # No messages
             return
 
-        # Randomise which we send
-        to_send = self.get_messages()
-        random.shuffle(to_send)
-
         # Limit number of messages
+        to_send = self.get_messages()
         to_send = to_send[:count]
 
         for idx in to_send:
