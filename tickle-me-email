@@ -702,9 +702,14 @@ class Command:
         maintype, subtype = ctype.split("/", 1)
 
         if maintype == "text":
-            data = data.decode('utf-8')
-            attachment = email.mime.text.MIMEText(data, _subtype=subtype)
-        elif maintype == "audio":
+            try:
+                data = data.decode('utf-8')
+            except UnicodeDecodeError:
+                pass
+            else:
+                attachment = email.mime.text.MIMEText(data, _subtype=subtype)
+
+        if maintype == "audio":
             attachment = email.mime.audio.MIMEAudio(data, _subtype=subtype)
         elif maintype == "image":
             attachment = email.mime.image.MIMEImage(data, _subtype=subtype)
