@@ -267,7 +267,7 @@ class Command:
 
         response = self.imap.append(
             self.quote(self.options.todo_mailbox),
-            r"\SEEN",
+            r"",
             imaplib.Time2Internaldate(time.time()),
             msg.as_string().encode("utf-8"),
         )
