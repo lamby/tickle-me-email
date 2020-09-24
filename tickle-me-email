@@ -267,7 +267,7 @@ class Command:
 
         response = self.imap.append(
             self.quote(self.options.todo_mailbox),
-            r"",
+            r"\SEEN" if self.options.todo_read else "",
             imaplib.Time2Internaldate(time.time()),
             msg.as_string().encode("utf-8"),
         )
@@ -459,28 +459,32 @@ class Command:
 
             setattr(self.options, "{}_secure".format(x), val)
 
-        for x, y, z in (
-            ("todo", "email", "TODO <nobody@example.com>"),
-            ("todo", "prefix", "TODO: "),
-            ("todo", "mailbox", "INBOX"),
-            ("imap", "sent_items", "INBOX.Sent Items"),
-            ("mbox", "mailbox", "INBOX"),
-            ("draft", "to", ""),
-            ("draft", "cc", ""),
-            ("draft", "bcc", ""),
-            ("draft", "subject", ""),
-            ("draft", "mailbox", "INBOX.Drafts"),
-            ("draft", "attachment", None),
-            ("draft", "extra_headers", ""),
-            ("sendmail", "attachment", None),
-            ("subjects", "mailbox", "INBOX"),
+        for type_, x, y, default in (
+            (str, "todo", "email", "TODO <nobody@example.com>"),
+            (str, "todo", "prefix", "TODO: "),
+            (str, "todo", "mailbox", "INBOX"),
+            (bool, "todo", "read", "0"),
+            (str, "imap", "sent_items", "INBOX.Sent Items"),
+            (str, "mbox", "mailbox", "INBOX"),
+            (str, "draft", "to", ""),
+            (str, "draft", "cc", ""),
+            (str, "draft", "bcc", ""),
+            (str, "draft", "subject", ""),
+            (str, "draft", "mailbox", "INBOX.Drafts"),
+            (str, "draft", "attachment", None),
+            (str, "draft", "extra_headers", ""),
+            (str, "sendmail", "attachment", None),
+            (str, "subjects", "mailbox", "INBOX"),
         ):
-            val = from_config("get", x, y) or z
+            val = from_config("get", x, y) or default
 
             try:
                 val = os.environ["{}_{}".format(x.upper(), y.upper())]
             except KeyError:
                 pass
+
+            if type_ is bool:
+                val = val.lower() in ("1", "true", "yes")
 
             setattr(self.options, "{}_{}".format(x, y), val)
 
