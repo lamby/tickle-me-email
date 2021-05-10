@@ -242,7 +242,7 @@ class Command:
                 for x in self.get_field("Subject", criterion)
             ]
 
-            for x in sorted(subjects):
+            for x in subjects:
                 print(" \xe2\x80\xa2 {}".format(x))
 
             return
@@ -281,7 +281,7 @@ class Command:
             # No messages
             return
 
-        for x in sorted(self.get_field("Subject")):
+        for x in self.get_field("Subject"):
             print(x.replace("\n", " ").replace("\r", " "))
 
     def handle_sent(self):
@@ -602,7 +602,7 @@ class Command:
     def get_messages(self, criterion="ALL"):
         self.log.debug("Searching for messages matching %r", criterion)
 
-        response = self.imap.search(None, criterion)
+        response = self.imap.sort('DATE', 'UTF-8', criterion)
 
         self.check_response(response, "Error searching for messages")
 
