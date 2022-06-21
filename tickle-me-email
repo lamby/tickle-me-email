@@ -247,8 +247,7 @@ class Command:
 
             return
 
-        if args == ("-",):
-            args = (sys.stdin.read(),)
+        args = self.rewrite_args(args)
 
         self.log.debug("Creating TODO message")
 
@@ -325,8 +324,7 @@ class Command:
     def handle_mbox(self, *args):
         self.connect_imap()
 
-        if args == ("-",):
-            args = (sys.stdin.read(),)
+        args = self.rewrite_args(args)
 
         self.log.debug("Adding mbox to %r", self.options.mbox_mailbox)
 
@@ -359,8 +357,7 @@ class Command:
             if v:
                 msg[k] = v
 
-        if args == ("-",):
-            args = (sys.stdin.read(),)
+        args = self.rewrite_args(args)
         msg.set_payload(" ".join(args))
 
         if self.options.draft_attachment:
@@ -733,6 +730,10 @@ class Command:
 
         return msg
 
+    def rewrite_args(self, args):
+        if args == ("-",) or args == ():
+            return (sys.stdin.read(),)
+        return args
 
 if __name__ == "__main__":
     try:
