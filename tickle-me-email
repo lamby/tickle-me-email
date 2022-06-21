@@ -331,10 +331,14 @@ class Command:
         content = " ".join(args)
         msg = email.message_from_string(content)
 
+        dt = email.utils.parsedate(msg["Date"])
+        if dt is None:
+            dt = datetime.datetime.utcnow().timetuple()
+
         response = self.imap.append(
             self.options.mbox_mailbox,
             "",
-            time.mktime(email.utils.parsedate(msg["Date"])),
+            time.mktime(dt),
             content.encode('utf-8'),
         )
 
