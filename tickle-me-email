@@ -79,9 +79,7 @@ class Command:
 
     def main(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--verbosity", dest="verbosity", type=int, default=0
-        )
+        parser.add_argument("--verbosity", dest="verbosity", type=int, default=0)
         parser.add_argument("action", help="action", choices=ACTIONS)
         parser.add_argument("arg", nargs="*")
 
@@ -97,13 +95,9 @@ class Command:
         fn = getattr(self, "handle_{}".format(action.replace("-", "_")))
         spec = inspect.getfullargspec(fn)
 
-        num_required = (
-            len(spec.args) - len(spec.defaults or ()) - 1
-        )  # ignore "self"
+        num_required = len(spec.args) - len(spec.defaults or ()) - 1  # ignore "self"
         if not spec.varargs and num_required < len(args):
-            parser.error(
-                "invalid number of arguments for action {}".format(action)
-            )
+            parser.error("invalid number of arguments for action {}".format(action))
 
         try:
             fn(*args)
@@ -140,9 +134,7 @@ class Command:
         for idx in sorted(messages, reverse=True):
             self.move_message(self.get_uid(idx), dst)
 
-        self.log.info(
-            "Moved %d message(s) from %s -> %s", len(messages), src, dst
-        )
+        self.log.info("Moved %d message(s) from %s -> %s", len(messages), src, dst)
 
     def handle_rotate(self, template, start, stop, target):
         self.connect_imap()
@@ -173,8 +165,8 @@ class Command:
             self.log.info("Creating %s", target)
             self.imap.create(target)
 
-    def handle_sendmail(self, filename='-'):
-        if filename is None or filename == '-':
+    def handle_sendmail(self, filename="-"):
+        if filename is None or filename == "-":
             self.log.debug("Sending message from stdin")
             raw = sys.stdin.read()
         else:
@@ -260,9 +252,7 @@ class Command:
         msg["Message-Id"] = email.utils.make_msgid()
         msg.set_payload(subject)
 
-        self.log.debug(
-            "Adding TODO message to mailbox %r", self.options.todo_mailbox
-        )
+        self.log.debug("Adding TODO message to mailbox %r", self.options.todo_mailbox)
 
         response = self.imap.append(
             self.quote(self.options.todo_mailbox),
@@ -315,9 +305,7 @@ class Command:
             dt = datetime.date.today() - datetime.timedelta(days=x)
 
             fmt = dt.strftime("%d-%b-%Y").lstrip("0")
-            num_sent = len(
-                self.get_messages("(ON {})".format(self.quote(fmt)))
-            )
+            num_sent = len(self.get_messages("(ON {})".format(self.quote(fmt))))
 
             print("{} {}".format(dt.strftime("%Y-%m-%d"), num_sent))
 
@@ -339,7 +327,7 @@ class Command:
             self.options.mbox_mailbox,
             "",
             time.mktime(dt),
-            content.encode('utf-8'),
+            content.encode("utf-8"),
         )
 
         self.check_response(response, "Error adding mbox item")
@@ -373,15 +361,13 @@ class Command:
             k, v = x.split(": ", 1)
             msg[k] = v
 
-        self.log.debug(
-            "Adding draft message to mailbox %r", self.options.draft_mailbox
-        )
+        self.log.debug("Adding draft message to mailbox %r", self.options.draft_mailbox)
 
         response = self.imap.append(
             self.quote(self.options.draft_mailbox),
             r"\DRAFT",
             imaplib.Time2Internaldate(time.time()),
-            msg.as_string().encode('utf-8'),
+            msg.as_string().encode("utf-8"),
         )
 
         self.check_response(response, "Error adding draft item")
@@ -392,9 +378,7 @@ class Command:
 
             for y in ("server", "username", "password", "secure"):
                 print(
-                    "{:>9}: {!r}".format(
-                        y, getattr(self.options, "{}_{}".format(x, y))
-                    )
+                    "{:>9}: {!r}".format(y, getattr(self.options, "{}_{}".format(x, y)))
                 )
             print()
 
@@ -402,11 +386,7 @@ class Command:
         print("====")
         print()
         for x in ("mailbox", "email", "prefix"):
-            print(
-                "{:>9}: {!r}".format(
-                    x, getattr(self.options, "todo_{}".format(x))
-                )
-            )
+            print("{:>9}: {!r}".format(x, getattr(self.options, "todo_{}".format(x))))
 
     # Setup ###################################################################
 
@@ -441,9 +421,7 @@ class Command:
 
                 if val is None:
                     parser.error(
-                        "missing {!r} config option for {}".format(
-                            y, x.upper()
-                        )
+                        "missing {!r} config option for {}".format(y, x.upper())
                     )
 
                 setattr(self.options, "{}_{}".format(x, y), val)
@@ -509,9 +487,7 @@ class Command:
         if self.imap is not None:
             return
 
-        klass = (
-            imaplib.IMAP4_SSL if self.options.imap_secure else imaplib.IMAP4
-        )
+        klass = imaplib.IMAP4_SSL if self.options.imap_secure else imaplib.IMAP4
 
         self.log.debug(
             "Connecting to IMAP server %s using %s",
@@ -594,16 +570,14 @@ class Command:
 
         response = self.imap.select(self.quote(mailbox))
 
-        self.check_response(
-            response, "Error selecting mailbox {!r}".format(mailbox)
-        )
+        self.check_response(response, "Error selecting mailbox {!r}".format(mailbox))
 
         return int(self.parse(response))
 
     def get_messages(self, criterion="ALL"):
         self.log.debug("Searching for messages matching %r", criterion)
 
-        response = self.imap.sort('DATE', 'UTF-8', criterion)
+        response = self.imap.sort("DATE", "UTF-8", criterion)
 
         self.check_response(response, "Error searching for messages")
 
@@ -666,9 +640,9 @@ class Command:
     def sendmail(self, msg):
         # Set some defaults
         for k, v in {
-            'From': '',
-            'Date': email.utils.format_datetime(datetime.datetime.utcnow()),
-            'Subject': '',
+            "From": "",
+            "Date": email.utils.format_datetime(datetime.datetime.utcnow()),
+            "Subject": "",
         }.items():
             if k not in msg:
                 msg[k] = v
@@ -679,9 +653,7 @@ class Command:
             for _, y in email.utils.getaddresses(msg.get_all(x, []))
         )
 
-        self.log.info(
-            "Sending message %r to %s", msg["subject"], ", ".join(recipients)
-        )
+        self.log.info("Sending message %r to %s", msg["subject"], ", ".join(recipients))
 
         self.smtp.sendmail(msg["from"], recipients, msg.as_string())
 
@@ -694,9 +666,7 @@ class Command:
             for k, v in old_msg.items():
                 msg[k] = v
 
-            msg.attach(
-                email.mime.text.MIMEText(old_msg.get_payload(), "plain")
-            )
+            msg.attach(email.mime.text.MIMEText(old_msg.get_payload(), "plain"))
 
         basename = os.path.basename(filename)
         with open(filename, "rb") as f:
@@ -711,7 +681,7 @@ class Command:
 
         if maintype == "text":
             try:
-                data = data.decode('utf-8')
+                data = data.decode("utf-8")
             except UnicodeDecodeError:
                 pass
             else:
@@ -726,9 +696,7 @@ class Command:
             attachment.set_payload(data)
             email.encoders.encode_base64(attachment)
 
-        attachment.add_header(
-            "Content-Disposition", "attachment", filename=basename
-        )
+        attachment.add_header("Content-Disposition", "attachment", filename=basename)
 
         msg.attach(attachment)
 
