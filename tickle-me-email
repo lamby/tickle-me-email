@@ -230,7 +230,7 @@ class Command:
 
             subjects = [
                 x[len(self.options.todo_prefix) :].strip()
-                for x in self.get_field("Subject", criterion)
+                for x in self.get_fields(("Subject",), criterion)
             ]
 
             for x in subjects:
@@ -269,8 +269,12 @@ class Command:
             # No messages
             return
 
-        for x in self.get_field("Subject"):
-            print(x.replace("\n", " ").replace("\r", " "))
+        for x, y in self.get_fields(("Subject", "From")):
+            print(x.replace("\n", " ").replace("\r", " "), end="")
+
+            if self.options.subjects_include_from and y != self.options.todo_email:
+                print(" ({})".format(self.parseaddr(y)), end="")
+            print()
 
     def handle_sent(self):
         self.connect_imap()
@@ -279,19 +283,11 @@ class Command:
         today = datetime.date.today().strftime("%d-%b-%Y").lstrip("0")
         num_sent = self.select_mailbox(self.options.imap_sent_items)
 
-        for x in self.get_field(
-            "Subject", "(ON {})".format(self.quote(today))
-        ):
-            print(
-                " \xe2\x80\xa2 {}".format(
-                    x.replace("\n", " ").replace("\r", " ")
-                )
-            )
+        for x in self.get_fields(("Subject",), "(ON {})".format(self.quote(today))):
+            print(" \xe2\x80\xa2 {}".format(x.replace("\n", " ").replace("\r", " ")))
             num_today += 1
 
-        print(
-            "\nI: Total sent: {} - sent today: {}".format(num_sent, num_today)
-        )
+        print("\nI: Total sent: {} - sent today: {}".format(num_sent, num_today))
 
     def handle_sent_history(self, *args):
         self.connect_imap()
@@ -453,6 +449,7 @@ class Command:
             (str, "draft", "extra_headers", ""),
             (str, "sendmail", "attachment", None),
             (str, "subjects", "mailbox", "INBOX"),
+            (bool, "subjects", "include_from", "0"),
         ):
             val = from_config("get", x, y) or default
 
@@ -603,24 +600,27 @@ class Command:
 
         return int(m.group("uid"))
 
-    def get_field(self, field, criterion="ALL"):
-        for idx in self.get_messages(criterion):
-            raw = self.fetch(
-                idx,
-                "(BODY.PEEK[HEADER.FIELDS ({})])".format(self.quote(field)),
-            )[1].decode("utf-8")
+    def get_fields(self, fields, criterion="ALL"):
+        query = "(BODY.PEEK[HEADER.FIELDS ({})])".format(" ".join(x for x in fields))
 
+        for idx in self.get_messages(criterion):
+            raw = self.fetch(idx, query)[1].decode("utf-8")
             if raw == "\r\n":
                 continue
 
-            val = email.message_from_string(raw)[field]
+            msg = email.message_from_string(raw)
 
             # https://stackoverflow.com/questions/7331351/python-email-header-decoding-utf-8
-            val = str(
-                email.header.make_header(email.header.decode_header(val))
-            )
+            vals = [
+                str(email.header.make_header(email.header.decode_header(msg[x])))
+                for x in fields
+            ]
 
-            yield val
+            if len(fields) == 1:
+                yield vals[0]
+                continue
+
+            yield vals
 
     def parse(self, val):
         return val[1][0]
@@ -705,6 +705,12 @@ class Command:
         if args == ("-",) or args == ():
             return (sys.stdin.read(),)
         return args
+
+    def parseaddr(self, val):
+        x, y = email.utils.parseaddr(val)
+
+        return x or y or "(unknown)"
+
 
 if __name__ == "__main__":
     try:
