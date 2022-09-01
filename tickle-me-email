@@ -28,7 +28,6 @@ import logging
 import argparse
 import datetime
 import mimetypes
-import email.utils
 import configparser
 import email.header
 import email.message
