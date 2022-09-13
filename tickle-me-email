@@ -131,7 +131,10 @@ class Command:
         messages = self.get_messages()
 
         for idx in sorted(messages, reverse=True):
-            self.move_message(self.get_uid(idx), dst)
+            uid = self.get_uid(idx)
+            if self.options.move_unread:
+                self.flag_message(uid, r"Seen", False)
+            self.move_message(uid, dst)
 
         self.log.info("Moved %d message(s) from %s -> %s", len(messages), src, dst)
 
@@ -440,6 +443,7 @@ class Command:
             (bool, "todo", "read", "0"),
             (str, "imap", "sent_items", "INBOX.Sent Items"),
             (str, "mbox", "mailbox", "INBOX"),
+            (bool, "move", "unread", "0"),
             (str, "draft", "to", ""),
             (str, "draft", "cc", ""),
             (str, "draft", "bcc", ""),
