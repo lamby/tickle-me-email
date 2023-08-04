@@ -265,18 +265,29 @@ class Command:
 
         self.check_response(response, "Error adding TODO item")
 
-    def handle_subjects(self):
+    def handle_subjects(self, *args):
         self.connect_imap()
 
-        if not self.select_mailbox(self.options.subjects_mailbox):
-            # No messages
-            return
+        def fn(mailbox):
+            if not self.select_mailbox(mailbox):
+                # No messages
+                return
 
-        for x, y in self.get_fields(("Subject", "From")):
-            print(x.replace("\n", " ").replace("\r", " "), end="")
+            for x, y in self.get_fields(("Subject", "From")):
+                print(x.replace("\n", " ").replace("\r", " "), end="")
 
-            if self.options.subjects_include_from and y != self.options.todo_email:
-                print(" ({})".format(self.parseaddr(y)), end="")
+                if self.options.subjects_include_from and y != self.options.todo_email:
+                    print(" ({})".format(self.parseaddr(y)), end="")
+                print()
+
+        args = sys.stdin.read().splitlines() if args == ("-",) else args
+
+        if not args:
+            return fn(self.options.subjects_mailbox)
+
+        for mailbox in args:
+            print(mailbox)
+            fn(mailbox)
             print()
 
     def handle_sent(self):
