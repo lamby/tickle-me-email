@@ -273,8 +273,15 @@ class Command:
                 # No messages
                 return
 
-            for x, y in self.get_fields(("Subject", "From")):
-                print(x.replace("\n", " ").replace("\r", " "), end="")
+            for subject, y in self.get_fields(("Subject", "From")):
+                subject = subject.replace("\n", " ")
+                subject = subject.replace("\r", " ")
+                subject = subject.replace("  ", " ")
+                if self.options.subjects_max_length > 0:
+                    subject = "{}…".format(
+                        subject[: self.options.subjects_max_length - 1].strip()
+                    )
+                print(subject, end="")
 
                 if self.options.subjects_include_from and y != self.options.todo_email:
                     print(" ({})".format(self.parseaddr(y)), end="")
@@ -465,6 +472,7 @@ class Command:
             (str, "sendmail", "attachment", None),
             (str, "subjects", "mailbox", "INBOX"),
             (bool, "subjects", "include_from", "0"),
+            (int, "subjects", "max_length", "-1"),
         ):
             val = from_config("get", x, y) or default
 
@@ -475,6 +483,9 @@ class Command:
 
             if type_ is bool:
                 val = val.lower() in ("1", "true", "yes")
+
+            if type_ is int:
+                val = int(val)
 
             setattr(self.options, "{}_{}".format(x, y), val)
 
