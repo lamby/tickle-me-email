@@ -277,10 +277,9 @@ class Command:
                 subject = subject.replace("\n", " ")
                 subject = subject.replace("\r", " ")
                 subject = subject.replace("  ", " ")
-                if self.options.subjects_max_length > 0:
-                    subject = "{}…".format(
-                        subject[: self.options.subjects_max_length - 1].strip()
-                    )
+                max_length = self.options.subjects_max_length
+                if max_length > 0 and len(subject) > max_length:
+                    subject = "{}…".format(subject[: max_length - 1].strip())
                 print(subject, end="")
 
                 if self.options.subjects_include_from and y != self.options.todo_email:
