@@ -533,7 +533,7 @@ class Command:
         )
         self.smtp = klass(self.options.smtp_server)
 
-        self.log.debug("Logging into SMTP server")
+        self.log.debug("Connected. Logging into SMTP server")
         self.smtp.login(self.options.smtp_username, self.options.smtp_password)
 
     def disconnect(self):
@@ -679,7 +679,7 @@ class Command:
 
         self.log.info("Sending message %r to %s", msg["subject"], ", ".join(recipients))
 
-        self.smtp.sendmail(msg["from"], recipients, msg.as_string())
+        self.smtp.sendmail(msg["from"], recipients, msg.as_string().encode("utf-8"))
 
     def add_attachment(self, msg, filename):
         if not msg.is_multipart():
